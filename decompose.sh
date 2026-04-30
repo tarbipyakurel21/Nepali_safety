@@ -31,7 +31,7 @@ MASTER_PORT=29500
 echo "MASTER_ADDR=$MASTER_ADDR MASTER_PORT=$MASTER_PORT"
 echo "Nodes: $SLURM_JOB_NODELIST"
 
-cd ~/projects/nepali_llm_safety
+cd ~/projects/Nepali_safety
 
 # Change --input_csv / --filename below for the three scripts:
 #   english:   datasets/english_questions.csv            ->  english_decomp
