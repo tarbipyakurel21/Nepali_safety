@@ -1,0 +1,12 @@
+# For gemma_inference.py, translate.py, safety_assessment.py, data_clean.py (cluster / DDP)
+# Cluster GPU driver supports CUDA 12.8 — install PyTorch with:
+#   pip install -r requirements.txt --index-url https://download.pytorch.org/whl/cu128
+torch
+transformers
+huggingface_hub
+tqdm
+accelerate
+sentencepiece
+protobuf        # required by sentencepiece tokenizers at runtime
+bitsandbytes    # 4-bit / 8-bit quantization for translate.py (Gemma 12B on 16 GB GPU)
+matplotlib      # analysis scripts: charts/figures for paper plots
