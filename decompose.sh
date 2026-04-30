@@ -15,6 +15,12 @@ module load miniconda/miniconda3
 source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate ~/myenv
 
+# ---- Load secrets from .env ----
+set -a
+source ~/projects/Nepali_safety/.env
+set +a
+: "${HF_TOKEN:?HF_TOKEN missing in ~/projects/Nepali_safety/.env}"
+
 # ---- Hugging Face ----
 export HUGGINGFACE_HUB_TOKEN="$HF_TOKEN"
 export HF_HOME=~/caches/hf
