@@ -34,7 +34,7 @@ MASTER_PORT=29501   # different port from infer.sh to avoid conflicts if both ru
 echo "MASTER_ADDR=$MASTER_ADDR MASTER_PORT=$MASTER_PORT"
 echo "Nodes: $SLURM_JOB_NODELIST"
 
-cd ~/projects/nepali_llm_safety
+cd ~/projects/Nepali_safety
 
 # ---- MODEL_ANSWER: stem of the RESULTS JSONL to assess ----
 #

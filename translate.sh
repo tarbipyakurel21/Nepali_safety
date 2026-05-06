@@ -29,7 +29,7 @@ echo "Node: $(hostname)"
 echo "GPUs available: $(nvidia-smi --list-gpus | wc -l)"
 nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
 
-cd ~/projects/nepali_llm_safety
+cd ~/projects/Nepali_safety
 
 # ---- FILENAME: stem of the RESULTS JSONL to translate ----
 # Override via: FILENAME=romanized_nepali_answers sbatch translate.sh
