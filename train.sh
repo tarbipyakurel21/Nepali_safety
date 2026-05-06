@@ -38,7 +38,7 @@ MASTER_PORT=29502   # distinct from infer.sh (29500) and safety.sh (29501)
 echo "MASTER_ADDR=$MASTER_ADDR MASTER_PORT=$MASTER_PORT"
 echo "Nodes: $SLURM_JOB_NODELIST"
 
-cd ~/projects/nepali_llm_safety
+cd ~/projects/Nepali_safety
 
 # ---- Dataset must exist (build it once before sbatch'ing this script) ----
 #   python build_refusal_dataset.py
