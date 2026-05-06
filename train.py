@@ -241,7 +241,7 @@ def main() -> None:
     # near-zero LR).  packing=True is the TRL equivalent of nanochat's
     # bestfit-pad sequence packing - critical for short refusal pairs since
     # otherwise most of each row is padding.
-    sft_config = SFTConfig(
+    sft_kwargs = dict(
         output_dir=output_dir,
         per_device_train_batch_size=args.batch_size,
         gradient_accumulation_steps=args.grad_accum,
@@ -252,7 +252,6 @@ def main() -> None:
         bf16=True,
         gradient_checkpointing=True,
         gradient_checkpointing_kwargs={"use_reentrant": False},
-        max_seq_length=args.max_seq_length,
         packing=args.packing,
         logging_steps=5,
         save_strategy="epoch",
@@ -261,6 +260,11 @@ def main() -> None:
         report_to="none",
         seed=args.seed,
     )
+    # TRL renamed max_seq_length -> max_length around v0.16; support both.
+    try:
+        sft_config = SFTConfig(max_length=args.max_seq_length, **sft_kwargs)
+    except TypeError:
+        sft_config = SFTConfig(max_seq_length=args.max_seq_length, **sft_kwargs)
 
     trainer = SFTTrainer(
         model=model,
