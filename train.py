@@ -266,13 +266,18 @@ def main() -> None:
     except TypeError:
         sft_config = SFTConfig(max_seq_length=args.max_seq_length, **sft_kwargs)
 
-    trainer = SFTTrainer(
+    # TRL/Transformers renamed the trainer kwarg `tokenizer` -> `processing_class`
+    # around transformers 4.46 / TRL 0.12.  Try the new name first.
+    trainer_kwargs = dict(
         model=model,
-        tokenizer=tokenizer,
         train_dataset=train_ds,
         eval_dataset=eval_ds,
         args=sft_config,
     )
+    try:
+        trainer = SFTTrainer(processing_class=tokenizer, **trainer_kwargs)
+    except TypeError:
+        trainer = SFTTrainer(tokenizer=tokenizer, **trainer_kwargs)
 
     if rank == 0:
         print("Starting LoRA SFT ...")
