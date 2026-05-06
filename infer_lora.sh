@@ -1,16 +1,20 @@
 #!/bin/bash
-#SBATCH --job-name=ddp_gemma_infer_lora
+#SBATCH --job-name=gemma_infer_lora
 #SBATCH --partition=main
-#SBATCH --nodes=4
+#SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1    # 1 process per node
-#SBATCH --cpus-per-task=15     # 15 CPU cores each
-#SBATCH --time=00:30:00        # 30 minutes
-#SBATCH --output=ddp_gemma_infer_lora.%j.out
-#SBATCH --error=ddp_gemma_infer_lora.%j.err
+#SBATCH --cpus-per-task=15     # 15 CPU cores
+#SBATCH --time=01:00:00        # 1 h is plenty for ~50 prompts on 1 GPU
+#SBATCH --output=gemma_infer_lora.%j.out
+#SBATCH --error=gemma_infer_lora.%j.err
 
-# Phase II inference launcher.  Same DDP layout as infer.sh, but loads
-# a LoRA adapter trained by train.py and writes RESULTS/<FILENAME>_<rank>.jsonl
-# in exactly the format safety_assessment.py / translate.py already expect.
+# Phase II inference launcher.  Single-node / single-GPU variant
+# (the user only has 1 GPU available right now).  infer_lora.py
+# auto-detects world_size=1 and skips dist.init_process_group, so
+# RESULTS/<FILENAME>_0.jsonl is the only file produced.
+#
+# Output schema is exactly the format safety_assessment.py /
+# translate.py already expect.
 #
 # Submit one job per language CSV by overriding env vars at submit time:
 #
