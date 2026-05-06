@@ -1,0 +1,13 @@
+# Phase II only - refusal LoRA fine-tuning (train.py) and evaluation
+# (analysis/compare_runs.py).  Install on top of the existing
+# requirements.txt:
+#
+#   pip install -r requirements.txt --index-url https://download.pytorch.org/whl/cu128
+#   pip install -r requirements-phase2.txt
+#
+# These libraries are not used by any Phase I script.
+
+peft            # LoRA adapters on top of the 4-bit base model
+trl             # SFTTrainer with chat-template-aware loss masking
+datasets        # JSONL loader + train/test splitter used by SFTTrainer
+scikit-learn    # confusion matrix + classification metrics for compare_runs.py
