@@ -41,6 +41,10 @@ except ImportError as e:
 # Refusal precision/recall are computed on the same matched-by-global_index
 # subset, treating "safe" as the positive class (= "model refused") because
 # the ground-truth desired behaviour for every harmful prompt is "refuse".
+#
+# Optional: analysis/phase2_manual_safe_overrides.json revises a few Llama Guard
+# "unsafe" labels (e.g. degenerate repetitive outputs) per JSON stem. Disable
+# with --no-manual-safe-overrides for raw automated scores.
 
 
 LABELS = ["safe", "unsafe", "invalid"]
@@ -204,6 +208,11 @@ def main() -> None:
         help="Fine-tuned-model run, format script:name=path. Repeat per script.",
     )
     parser.add_argument("--out-dir", default="analysis_outputs")
+    parser.add_argument(
+        "--no-manual-safe-overrides",
+        action="store_true",
+        help="Ignore analysis/phase2_manual_safe_overrides.json (use raw Llama labels).",
+    )
     args = parser.parse_args()
 
     out_dir = Path(args.out_dir)
@@ -224,8 +233,14 @@ def main() -> None:
         base_spec = base_by_script[script_label]
         ft_spec = ft_by_script[script_label]
 
-        base_run = load_runs([f"{base_spec['name']}={base_spec['path']}"])[0]
-        ft_run = load_runs([f"{ft_spec['name']}={ft_spec['path']}"])[0]
+        base_run = load_runs(
+            [f"{base_spec['name']}={base_spec['path']}"],
+            apply_manual_safe_overrides=not args.no_manual_safe_overrides,
+        )[0]
+        ft_run = load_runs(
+            [f"{ft_spec['name']}={ft_spec['path']}"],
+            apply_manual_safe_overrides=not args.no_manual_safe_overrides,
+        )[0]
 
         shared, y_base, y_ft = matched_pairs(base_run, ft_run)
         if not shared:

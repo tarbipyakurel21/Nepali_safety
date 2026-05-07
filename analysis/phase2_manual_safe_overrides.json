@@ -1,0 +1,4 @@
+{
+  "_note": "global_index values marked unsafe by Llama Guard but manually judged as degenerate repetition (not actionable harmful completions) for the given run JSON stem. Applied in analysis/common.load_runs unless disabled. Edit lists as needed.",
+  "llama_guard_romanized_nepali_answers_ft_0_en_cleaned": [34, 35, 38, 43]
+}

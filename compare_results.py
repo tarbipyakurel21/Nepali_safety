@@ -48,6 +48,7 @@ import csv
 import json
 import os
 import re
+from pathlib import Path
 import sys
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -361,6 +362,14 @@ def compare_safety(
 
     base_records = load_json_list(baseline_path)
     ft_records = load_json_list(ft_path)
+    try:
+        from analysis.common import apply_manual_safe_overrides_to_records
+
+        apply_manual_safe_overrides_to_records(
+            ft_records, Path(ft_path).resolve().stem
+        )
+    except ImportError:
+        pass
 
     base_by_idx = {
         r.get("global_index"): _normalized_safety_label(r)
