@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=ddp_llama_guard
 #SBATCH --partition=main
-#SBATCH --nodes=4
+#SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1    # 1 process (1 GPU) per node
 #SBATCH --cpus-per-task=15     # 15 CPU cores each
 #SBATCH --time=01:00:00        # Llama Guard is larger; allow 1 hour
