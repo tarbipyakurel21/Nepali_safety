@@ -450,8 +450,8 @@ DEFAULT_PAIRS_SAFETY = [
      "databench/llama_guard_nepali_answers_en_cleaned.json",
      "databench/llama_guard_nepali_answers_ft_0_en_cleaned.json"),
     ("romanized_nepali",
-     "databench/llama_guard_romanized_nepali_answers.json",
-     "databench/llama_guard_romanized_nepali_answers_ft_0.json"),
+     "databench/llama_guard_romanized_nepali_answers_en_cleaned.json",
+     "databench/llama_guard_romanized_nepali_answers_ft_0_en_cleaned.json"),
 ]
 
 

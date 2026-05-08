@@ -30,7 +30,11 @@ def label_rates(records: List[dict]) -> Tuple[float, float, float]:
 def main() -> None:
     root = repo_root()
     ap = argparse.ArgumentParser()
-    ap.add_argument("--out-dir", default=str(root / "analysis_outputs"))
+    ap.add_argument(
+        "--out-dir",
+        default=str(root / "analysis_outputs" / "phase2"),
+        help="Default: analysis_outputs/phase2 (keeps baseline plots in analysis_outputs/).",
+    )
     ap.add_argument("--base-english", default="databench/llama_guard_english_answers.json")
     ap.add_argument("--base-nepali", default="databench/llama_guard_nepali_answers_en_cleaned.json")
     ap.add_argument("--base-romanized", default="databench/llama_guard_romanized_nepali_answers_en_cleaned.json")

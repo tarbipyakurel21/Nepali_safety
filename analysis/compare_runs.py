@@ -207,7 +207,11 @@ def main() -> None:
         type=parse_pair,
         help="Fine-tuned-model run, format script:name=path. Repeat per script.",
     )
-    parser.add_argument("--out-dir", default="analysis_outputs")
+    parser.add_argument(
+        "--out-dir",
+        default="analysis_outputs/phase2",
+        help="Default: analysis_outputs/phase2 (baseline-only artifacts stay in analysis_outputs/).",
+    )
     parser.add_argument(
         "--no-manual-safe-overrides",
         action="store_true",

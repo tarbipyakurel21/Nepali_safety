@@ -18,14 +18,19 @@
 #     # Llama-Guard verdict comparison.  Needs databench/llama_guard_*.json
 #     # for both runs.  Run *after* you've sbatch'd safety.sh on each
 #     # ft answer file as well.
-#     MODE=safety bash compare_results.sh
+#     # Optionally: SAFETY_OUT_DIR=analysis_outputs/phase2 MODE=safety bash compare_results.sh
+#     # Uses python3 by default; override with PYTHON=/path/to/python if needed.
 #
 
 set -euo pipefail
 
 cd "$(dirname "$0")"
 
+PY="${PYTHON:-python3}"
+
 MODE="${MODE:-answers}"
+# Fine-tuned / Llama Guard comparison artifacts (keeps baseline-only plots in analysis_outputs/)
+SAFETY_OUT_DIR="${SAFETY_OUT_DIR:-analysis_outputs/phase2}"
 
 # If we're on the cluster, the conda env from train.sh / infer_lora.sh
 # already has scikit-learn available (it's listed in requirements-phase2.txt).
@@ -36,9 +41,15 @@ if command -v conda >/dev/null 2>&1 && [ -d "$HOME/myenv" ]; then
     conda activate ~/myenv
 fi
 
-python -u compare_results.py --mode "$MODE" --all
-
-echo
-echo "Outputs written to analysis_outputs/"
+if [ "$MODE" = "safety" ]; then
+  mkdir -p "$SAFETY_OUT_DIR"
+  "$PY" -u compare_results.py --mode "$MODE" --all --out_dir "$SAFETY_OUT_DIR"
+  echo
+  echo "Safety comparison outputs -> ${SAFETY_OUT_DIR}/"
+else
+  "$PY" -u compare_results.py --mode "$MODE" --all
+  echo
+  echo "Outputs written to analysis_outputs/"
+fi
 echo "  per-language CSVs : answer_comparison_<label>.csv  (or safety_cm_<label>.csv)"
 echo "  top-line summary  : answer_comparison_summary.csv  (or safety_comparison_summary.csv)"
