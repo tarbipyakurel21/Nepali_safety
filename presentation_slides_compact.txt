@@ -1,0 +1,211 @@
+Project Presentation Draft (Compact, PPT-Ready)
+================================================
+
+Slide 1 - Project Title
+-----------------------
+Safety Evaluation and Refusal Training of LLMs in Low-Resource Language: Nepali
+
+- Presenter: [Your Name]
+- Organization/Course: [Your Organization]
+- Date: [Presentation Date]
+- GitHub Repository: [INSERT_GITHUB_REPO_LINK]
+
+
+Slide 2 - Problem Statement
+---------------------------
+- Low-resource languages like Nepali are underrepresented in LLM safety alignment.
+- Nepali appears in multiple scripts (Devanagari + Romanized), increasing evaluation complexity.
+- Harmful prompts may bypass safety behavior in non-English contexts.
+- Need: language-aware safety evaluation and refusal tuning.
+
+[Image Placeholder: Motivation diagram - "English safety vs Low-resource safety gap"]
+
+
+Slide 3 - Objectives
+--------------------
+- Build a reproducible safety-evaluation pipeline for Nepali prompts.
+- Measure Safe/Unsafe/Invalid behavior across English, Nepali, and Romanized Nepali.
+- Fine-tune baseline model with refusal-style responses (LoRA SFT).
+- Compare baseline vs fine-tuned behavior with quantitative metrics.
+
+
+Slide 4 - Methodology Overview
+------------------------------
+Pipeline (Phase I -> Phase II):
+1) Generate model answers
+2) Translate Nepali outputs to English for judging
+3) Classify with safety judge (safe/unsafe/invalid)
+4) Fine-tune with refusal pairs
+5) Re-evaluate and compare confusion matrices
+
+[Image Placeholder: End-to-end pipeline flowchart]
+
+
+Slide 5 - Algorithms, Models, and Techniques
+--------------------------------------------
+- Target model: `google/gemma-3-4b-it` (baseline + LoRA-tuned).
+- Translation model: `google/gemma-3-12b-it` (back-translation for judging).
+- Safety judge: `meta-llama/Llama-Guard-3-8B`.
+- Technique: Parameter-Efficient Fine-Tuning (LoRA) + 4-bit quantization.
+- Evaluation logic:
+  - Answer mode: refusal keyword/marker detection + 2x2 transition matrix.
+  - Safety mode: safe/unsafe/invalid confusion matrix.
+
+
+Slide 6 - Programming Stack and Tools
+-------------------------------------
+- Language: Python (3.10+)
+- Core libraries: `torch`, `transformers`, `accelerate`, `peft`, `bitsandbytes`, `scikit-learn`, `matplotlib`, `tqdm`
+- Infrastructure: SLURM + PyTorch DDP (cluster execution)
+- Data handling: CSV/JSON/JSONL pipelines
+
+[Image Placeholder: "Tech stack" icon strip]
+
+
+Slide 7 - Datasets
+------------------
+- Phase I prompts: 52 harmful prompts per script
+  - `datasets/english_questions.csv`
+  - `datasets/nepali_questions.csv`
+  - `datasets/romanized_nepali_questions.csv`
+- Scripts covered:
+  - English
+  - Nepali (Devanagari)
+  - Romanized Nepali
+- Phase II training:
+  - Refusal pairs in `datasets/refusal_pairs.jsonl`
+
+
+Slide 8 - Source Code and Implementation Approach
+-------------------------------------------------
+- Inference: `gemma_inference.py`
+- Translation: `translate.py`
+- Safety scoring: `safety_assessment.py`
+- Fine-tuned inference: `infer_lora.py`
+- Baseline vs FT comparison: `compare_results.py`
+- Plotting/analysis: `analysis/*.py`
+
+Implementation principle:
+- Modular scripts, file-based interfaces, reproducible batch runs.
+- Baseline and FT outputs are paired by shared question/global index, not row order.
+
+GitHub Source Links (replace base URL once):
+- Repo: [INSERT_GITHUB_REPO_LINK]
+- Inference script: [INSERT_GITHUB_REPO_LINK]/blob/main/gemma_inference.py
+- LoRA inference: [INSERT_GITHUB_REPO_LINK]/blob/main/infer_lora.py
+- Comparison script: [INSERT_GITHUB_REPO_LINK]/blob/main/compare_results.py
+- Analysis folder: [INSERT_GITHUB_REPO_LINK]/tree/main/analysis
+
+
+Slide 9 - Experimental Setup
+----------------------------
+- Environment:
+  - Local development on macOS
+  - GPU execution on cluster via SLURM scripts (`infer.sh`, `translate.sh`, `safety.sh`)
+- Hardware constraint:
+  - 16GB VRAM -> 4-bit quantization for larger judge/translation models
+- Evaluation modes:
+  - Answer-level refusal behavior transitions
+  - Safety-label transitions (safe/unsafe/invalid)
+
+
+Slide 10 - Performance Metrics
+------------------------------
+Primary metrics:
+- Safe %, Unsafe %, Invalid % (per language/script)
+- Refusal Rate (baseline vs fine-tuned)
+- Delta Refusal Rate (percentage point change)
+- Transition counts:
+  - Improved: not_refused -> refused
+  - Regression: refused -> not_refused
+  - unsafe -> safe (safety mode)
+  - safe -> unsafe (safety mode)
+
+[Image Placeholder: Metric definitions table]
+
+
+Slide 11 - Results (Phase I Baseline)
+-------------------------------------
+Reported baseline safety results (52 prompts/script):
+- English: Safe 96.15%, Unsafe 3.85%, Invalid 0.00%
+- Nepali (Devanagari): Safe 98.08%, Unsafe 1.92%, Invalid 0.00%
+- Romanized Nepali: Safe 96.15%, Unsafe 1.92%, Invalid 1.92%
+
+Takeaway:
+- Unsafe outputs are low but non-zero.
+- Romanized Nepali shows higher instability (unsafe + invalid behavior).
+
+[Image Placeholder: Bar chart of Safe/Unsafe/Invalid by script]
+
+
+Slide 12 - Baseline vs Fine-Tuned Comparison
+--------------------------------------------
+From `compare_results.py` output:
+- Matched samples: [N]
+- Baseline refusal rate: [X%]
+- Fine-tuned refusal rate: [Y%]
+- Delta: [Y - X percentage points]
+- Improved: [count]
+- Regression: [count]
+- Still unsafe: [count]
+
+[Image Placeholder: 2x2 baseline-vs-FT transition matrix]
+[Image Placeholder: Sample response pairs table]
+
+
+Slide 13 - Analysis vs Alternative/Baseline Methods
+---------------------------------------------------
+Compared approaches:
+- Baseline (`gemma-3-4b-it`) vs LoRA fine-tuned model
+- Rule-based refusal detector vs safety-judge labels
+
+Interpretation:
+- LoRA should increase refusals on harmful prompts.
+- Transition analysis reveals whether gains come with harmful regressions.
+- Safety judge adds external validation but depends on translation quality.
+
+
+Slide 14 - Strengths, Weaknesses, Limitations
+---------------------------------------------
+Strengths:
+- End-to-end multilingual safety pipeline
+- Reproducible script-based evaluation
+- Multiple evaluation views (answer-level + judge-level)
+
+Weaknesses / limitations:
+- Small prompt set (52/script) limits statistical confidence
+- English-centric judge requires back-translation
+- Translation noise can affect labels
+- Quantization/VRAM constraints may impact generation fidelity
+
+
+Slide 15 - Conclusion
+---------------------
+- The project establishes a practical safety benchmark for Nepali-script prompts.
+- Baseline behavior is mostly safe, but residual unsafe/invalid outputs remain.
+- LoRA-based refusal tuning provides a controlled path to improve safety behavior.
+- Comparative analysis framework is reusable for future low-resource language safety work.
+
+
+Slide 16 - Future Work
+----------------------
+- Expand dataset size and prompt diversity (including jailbreak-style prompts).
+- Add human-annotated subset to validate judge reliability.
+- Improve Romanized Nepali robustness.
+- Explore stronger baselines / additional judges.
+- Move from refusal-only behavior to safer helpful alternatives where appropriate.
+
+[Image Placeholder: Roadmap timeline]
+
+
+Slide 17 - Demo / Appendix (Optional)
+-------------------------------------
+- Demo command examples:
+  - `python compare_results.py --all`
+  - `python compare_results.py --mode safety --all`
+- Output artifacts:
+  - `analysis_outputs/answer_comparison_summary.csv`
+  - `analysis_outputs/safety_comparison_summary.csv`
+
+[Image Placeholder: Terminal output screenshot]
+[Image Placeholder: Example CSV screenshot]

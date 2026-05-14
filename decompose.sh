@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=ddp_decompose_attack
 #SBATCH --partition=main
-#SBATCH --nodes=3
+#SBATCH --nodes=2
 #SBATCH --ntasks-per-node=1     # 1 process per node
 #SBATCH --cpus-per-task=15      # 15 CPU cores each
 #SBATCH --time=02:00:00         # 2 hours (3 stages = Qwen + Gemma + Qwen)

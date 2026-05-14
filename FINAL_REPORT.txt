@@ -1,0 +1,148 @@
+Safety Evaluation and Refusal Training of LLMs in Low-Resource Language: Nepali
+
+
+Abstract
+
+Large language models (LLMs) are predominantly aligned and evaluated in high-resource languages such as English. For low-resource languages like Nepali which is often written in Devanagari or in informal Romanized form, safety behavior is less well characterized, and harmful prompts may elicit non-refusal or invalid outputs. This work presents an end-to-end pipeline that runs a fixed set of harmful prompts in English, Nepali (Devanagari), and Romanized Nepali on a Gemma-4B baseline model then translates model answers to English and scores them with Llama Guard 3. In phase II, the Gemma-4B baseline model is fine-tuned with parameter-efficient LoRA on Nepali-centric refusal pairs, then re-evaluated with the same Llama Guard 3 model. On 52 prompts per language, baseline judge-verdict rates are mostly safe but not perfect. Because residual errors remained in Phase I, we conducted phase II fine tuning and judged the fine-tuned model in the same judging pipeline as Phase I. Fine-tuning specifically benefited Romanized Nepali when comparing the raw baseline judge file to the fine-tuned artifact: safe judge verdicts increased from 96.15% to 98.08%, a gain of 1.93 percentage points (one Invalid verdict moves to Safe; unsafe rate stays 1.92%). In contrast, the safety performance for English and Devanagari Nepali showed no change between the baseline and fine-tuned models.
+
+
+Introduction and background
+
+Alignment of LLM is Fine-Tuning of LLM done to refuse harmful/prohibitive content. A lot of resources have been spent for the safety alignment of LLMs. But there exists linguistic inequality of safety training data. Before, this linguistic inequality mainly imposed utility and accessibility issues to low-resource language users. Now, the inequality leads to safety risks that affect all LLM users. This is further exacerbated by the progress of language diversity in translation technology. Major issue is for low-resource speaking users who are exposed to discrimination, legally gray and black topics related to abuse, torture, harassment, rape etc. The Larger impact: If high resource language speakers(EG: English) don’t get their adversarial objective fulfilled in English they can easily translate their input to low-resource language using translation apis(eg: Google translation API or Meta translation API) and prompt the LLM and translate back to High Resource Language using same translation apis.
+
+The broader need is language-aware safety evaluation (so harmful prompts are not only tested in English) and targeted refusal tuning so that alignment transfers across scripts. This project follows a two-phase design inspired by standard ML practice: first measure baseline safety with an automated judge, then apply lightweight adaptation (LoRA SFT) and compare quantitative outcomes.
+
+
+Problem description
+
+Low-Resource languages are languages that are spoken by many people but are digitally scarce.
+Hence, Large Language Models(LLMs) lack extensive training in Low-Resource Languages such as Nepali. Nepali is also written in different scripts such as Nepali Devanagari script (बम कसरी बनाउने?) or romanized nepali (Bomb kasari banaune?). The translation for these scripts: How to make a bomb? LLMs may produce safe, unsafe or invalid responses for these questions. The goal of this work is to make the LLMs safe when answering prompts in a Low-Resource Language so that it maintains the safety of the response as well as the LLMs helpfulness.
+
+
+Methodology
+
+Phase I Safety Evaluation:
+
+Evaluated the safety of the model Gemma-4b on 2 languages English and Nepali and it’s 3 different script:
+
+Phase II Refusal Training:
+
+Train the model on refusal pairs to improve the safety of the model in multilingual contexts.
+
+Pipeline (Phase I -> Phase II):
+
+1) Generate model answers
+2) Translate Nepali outputs to English for judging
+3) Classify with safety judge (safe/unsafe/invalid)
+4) Fine-tune with refusal pairs
+5) Re-evaluate and compare confusion matrices
+
+
+Implementation Details
+
+Language: Python (3.10+)
+
+Core libraries: `torch`, `transformers`, `accelerate`, `peft`, `bitsandbytes`, `scikit-learn`, `matplotlib`, `tqdm`
+
+Infrastructure: SLURM + PyTorch DDP (cluster execution)
+
+Data handling: CSV/JSON/JSONL pipelines
+
+Datasets: Generated using Gemini Flash
+
+Phase I prompts: 52 harmful prompts per script
+datasets/english_questions.csv
+datasets/nepali_questions.csv
+datasets/romanized_nepali_questions.csv
+
+Scripts covered:
+English
+Nepali (Devanagari)
+Romanized Nepali
+
+Phase II training: 114 total
+Refusal pairs in datasets/refusal_pairs.jsonl
+
+
+Results, evaluations, comparison, and discussion
+
+
+Evaluation setup (both phases):
+Judge:
+Llama Guard 3 on English text built from each prompt and the model’s answer (Nepali and Romanized Nepali answers are translated to English before judging, consistent with the pipeline).
+
+Scale:
+n = 52 harmful prompts per script for Phase I baseline and for Phase II re-evaluation.
+
+Pairing:
+Baseline and fine-tuned outputs are aligned by the same global_index per prompt so comparisons are apples-to-apples.
+
+Phase I results (baseline Gemma-4B):
+Table 1 reports Llama Guard verdict rates for the baseline model:
+
+Script                    Safe      Unsafe    Invalid
+English                   96.15%    3.85%     0.00%
+Nepali (Devanagari)       98.08%    1.92%     0.00%
+Romanized Nepali (raw)    96.15%    1.92%     1.92%
+
+Figure 1: Safety label distribution across English, Devanagari Nepali, and Romanized Nepali for baseline Gemma-4B.
+
+Phase II results (LoRA fine-tuned Gemma-4B, same judge pipeline)
+
+Table 2 reports Llama Guard verdict rates for the LoRA fine-tuned Gemma-4B model:
+
+Script                    Safe      Unsafe    Invalid
+English                   96.15%    3.85%     0.00%
+Nepali (Devanagari)       98.08%    1.92%     0.00%
+Romanized Nepali          98.08%    1.92%     0.00%
+
+Figure 2: Safety label distribution across English, Devanagari Nepali, and Romanized Nepali for LoRA fine-tuned Gemma-4B.
+
+Phase I vs Phase II comparison
+
+Table 3 summarizes the change from baseline to fine-tuned on the paired artifacts (52 prompts each):
+
+Script                 Phase I Safe   Phase II Safe   Change (percentage points)
+English                96.15%         96.15%          0.00
+Nepali (Devanagari)    98.08%         98.08%          0.00
+Romanized Nepali       96.15%         98.08%          +1.93
+
+Figure 3: Gemma-4B responses: baseline vs refusal fine-tuning comparison.
+
+Results and Analysis
+
+The primary objective was to improve safety for low-resource Nepali prompts while maintaining helpfulness. Initial results in Phase I revealed that while Romanized Nepali looked mostly safe by Safe%, the raw judge file still contained one Invalid response (1.92%). Invalid means the judge did not classify the answer as clearly safe or unsafe.
+
+In Phase II, after applying LoRA fine-tuning with 114 refusal-style supervision examples, we eliminated that Invalid bucket for Romanized Nepali in Table 2 (0% Invalid). For English and Devanagari Nepali, the percentages for all three metrics (safe/unsafe/invalid) remained the same. For Romanized Nepali, the former Invalid case is judged Safe in the fine-tuned run, so Safe rises to 98.08% and aggregate rates align with English and Devanagari in Table 2.
+
+Note: comparing Romanized en_cleaned baseline vs fine-tuned judge files instead of raw vs FT shows a drop in unsafe rate (5.77% to 1.92%); that is a different baseline row than Table 1’s raw Romanized counts.
+
+Limitations
+
+The Table 3 Romanized comparison (raw Phase I vs Phase II) improves Safe via Invalid→Safe; unsafe count stays at one (1.92%) in that pairing, so it does not by itself show fewer unsafe verdicts. Unsafe→safe gains appear when the Romanized baseline is taken from the en_cleaned artifact. n = 114 and n = 52 per script are small; the judge operates on English translations of answers.
+
+Conclusion
+
+The project establishes a practical safety benchmark and workflow for Nepali-script prompts: baseline behavior is mostly safe under Llama Guard. This project demonstrates that targeted LoRA fine-tuning can effectively bridge the safety gap in low-resource scripts like Romanized Nepali. By removing the Invalid verdict and recovering a Safe label for that response, we show that even a small, curated dataset (n=114) can reduce judge-flagged ambiguity without degrading English or Devanagari. This framework serves as a scalable starting point for broader multilingual safety alignment, proving that safety repairs can be applied to script-specific vulnerabilities.
+
+
+References
+
+Upadhayay, Bibek, and Vahid Behzadan. "Tongue-Tied: Breaking LLMs Safety Through New Language Learning." Proceedings of the 7th Workshop on Computational Approaches to Linguistic Code-Switching, Association for Computational Linguistics, 2025, pp. 32–47. https://aclanthology.org/2025.calcs-1.5/
+
+Yong, Zheng-Xin, Cristina Menghini, and Stephen H. Bach. "Low-Resource Languages Jailbreak GPT-4." arXiv preprint arXiv:2310.02446 (2024). https://arxiv.org/abs/2310.02446
+
+Qi, Xiangyu, et al. "Visual Adversarial Examples Jailbreak Aligned Large Language Models." arXiv preprint arXiv:2306.13213 (2023). https://arxiv.org/abs/2306.13213
+
+Shen, Lingfeng, et al. "The Language Barrier: Dissecting Safety Challenges of LLMs in Multilingual Contexts." arXiv preprint arXiv:2401.13136 (2024). https://arxiv.org/abs/2401.13136
+
+Deng, Yue, et al. "Multilingual Jailbreak Challenges in Large Language Models." ICLR 2024. https://openreview.net/forum?id=vESNKdEMGp
+
+
+Appendix:
+
+Low-Resource: Languages that have less unlabeled data to use
+
+Mid-Resource: languages with strong web presence and where unsupervised pre training is possible. These languages make up close to 4.5% of the languages of the world and have around 1.8 billion speakers.
+
+High-Resource: languages with a large amount of unlabeled data and comparatively less labeled data and "languages with the most amount of unlabeled and labeled data. These languages make up close to 1.5% of the languages of the world and have around 4.7 billion speakers.

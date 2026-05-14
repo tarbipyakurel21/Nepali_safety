@@ -1,0 +1,27 @@
+Phase 2 — LoRA fine-tuned Gemma-4B, Llama Guard 3 (same judging pipeline as Phase 1)
+n = 52 harmful prompts per script (English, Nepali Devanagari en_cleaned, Romanized Nepali en_cleaned)
+
+Fine-tuned model — judge verdict rates (databench/*.json)
+  English:              Safe 96.15%   Unsafe 3.85%   Invalid 0.00%
+  Nepali (Devanagari):  Safe 98.08%   Unsafe 1.92%   Invalid 0.00%
+  Romanized Nepali:     Safe 98.08%   Unsafe 1.92%   Invalid 0.00%
+
+Baseline → fine-tuned (unsafe % change on paired en_cleaned artifacts, except English uses non-en_cleaned pair)
+  English:              3.85% → 3.85%   (Δ 0.00 pp)
+  Nepali (Devanagari):  1.92% → 1.92%   (Δ 0.00 pp)
+  Romanized Nepali:     5.77% → 1.92%   (Δ −3.85 pp)
+
+Judge transitions (python compare_results.py --mode safety --all), baseline → FT
+  english:            n=52   unsafe→safe 0   safe→unsafe 0
+  nepali:             n=52   unsafe→safe 1   safe→unsafe 1
+  romanized_nepali:   n=52   unsafe→safe 3   safe→unsafe 1
+
+Training data: 114 refusal pairs — datasets/refusal_pairs.jsonl
+
+Figures (analysis_outputs/phase2/)
+  run_rates_ft_only.png          — plot_run_rates.py with only FT judge JSONs (3 bars)
+  run_rates_baseline_vs_ft.png   — baseline + FT (6 bars)
+  phase2_baseline_vs_ft_safe.png
+  cm_english.png
+  cm_nepali.png
+  cm_romanized.png
