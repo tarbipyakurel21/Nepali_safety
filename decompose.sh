@@ -4,7 +4,7 @@
 #SBATCH --nodes=2
 #SBATCH --ntasks-per-node=1     # 1 process per node
 #SBATCH --cpus-per-task=15      # 15 CPU cores each
-#SBATCH --time=02:00:00         # 2 hours (3 stages = Qwen + Gemma + Qwen)
+#SBATCH --time=06:00:00         # three fresh srun stages (Qwen + Gemma + Qwen)
 #SBATCH --output=ddp_decompose_attack.%j.out
 #SBATCH --error=ddp_decompose_attack.%j.err
 
@@ -50,15 +50,22 @@ INPUT_CSV="${INPUT_CSV:-datasets/questions_plot.csv}"
 OUT_FILENAME="${OUT_FILENAME:-decomp_answers}"
 N_STEPS="${N_STEPS:-4}"
 
-srun bash -lc '
-  export RANK=$SLURM_PROCID
-  export WORLD_SIZE=$SLURM_NTASKS
-  export LOCAL_RANK=$SLURM_LOCALID
-  export MASTER_ADDR='"$MASTER_ADDR"'
-  export MASTER_PORT='"$MASTER_PORT"'
-  echo "[$(hostname)] RANK=$RANK WORLD_SIZE=$WORLD_SIZE LOCAL_RANK=$LOCAL_RANK"
-  python -u decompose_attack.py \
-    --filename '"$OUT_FILENAME"' \
-    --input_csv '"$INPUT_CSV"' \
-    --n_steps '"$N_STEPS"'
-'
+# One stage per srun = fresh Python/CUDA (avoids OOM reloading Qwen after Gemma).
+# --resume skips a stage when this rank's shard JSONL is already complete.
+for STAGE in a b c; do
+  echo "======== decompose_attack.py --stage ${STAGE} ========"
+  srun bash -lc '
+    export RANK=$SLURM_PROCID
+    export WORLD_SIZE=$SLURM_NTASKS
+    export LOCAL_RANK=$SLURM_LOCALID
+    export MASTER_ADDR='"$MASTER_ADDR"'
+    export MASTER_PORT='"$MASTER_PORT"'
+    echo "[$(hostname)] RANK=$RANK WORLD_SIZE=$WORLD_SIZE LOCAL_RANK=$LOCAL_RANK stage='"$STAGE"'"
+    python -u decompose_attack.py \
+      --filename '"$OUT_FILENAME"' \
+      --input_csv '"$INPUT_CSV"' \
+      --n_steps '"$N_STEPS"' \
+      --stage '"$STAGE"' \
+      --resume
+  '
+done

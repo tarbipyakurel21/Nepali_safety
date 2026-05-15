@@ -24,6 +24,11 @@ import torch.distributed as dist
 #   - Models are released between stages to keep headroom for activations.
 # DDP layout mirrors gemma_inference.py: rank-based striding, one JSONL per
 # rank, rank 0 merges at the end.
+#
+# For ~16GB GPUs: run one stage per process (fresh CUDA) via --stage a|b|c and
+# three sequential srun lines in decompose.sh. Use --resume to skip a stage
+# when this rank's JSONL shard is already complete. --stage all keeps the
+# legacy single-process A→B→C chain (may OOM after Gemma when reloading Qwen).
 
 QWEN_MODEL_ID   = "Qwen/Qwen3-8B"
 GEMMA_MODEL_ID  = "google/gemma-3-4b-it"
@@ -70,7 +75,17 @@ def setup_dist():
     local_rank = int(os.environ.get("LOCAL_RANK", 0))
 
     if world_size > 1:
-        dist.init_process_group(backend="nccl", init_method="env://")
+        if torch.cuda.is_available():
+            try:
+                dist.init_process_group(
+                    backend="nccl",
+                    init_method="env://",
+                    device_id=local_rank,
+                )
+            except TypeError:
+                dist.init_process_group(backend="nccl", init_method="env://")
+        else:
+            dist.init_process_group(backend="nccl", init_method="env://")
 
     if torch.cuda.is_available():
         torch.cuda.set_device(local_rank)
@@ -235,49 +250,106 @@ def gemma_generate(processor, model, user: str, max_new_tokens: int = 1024) -> s
     return processor.decode(gen[0][input_len:], skip_special_tokens=True).strip()
 
 
-# ============= Main pipeline =============
+# ============= Shard I/O (resume / cross-stage) =============
 
-def _run_pipeline(args, rank: int, world_size: int, local_rank: int) -> None:
-    repo_root = os.path.dirname(os.path.abspath(__file__))
-    in_path   = os.path.join(repo_root, args.input_csv)
-    out_dir   = os.path.join(repo_root, "RESULTS")
-    os.makedirs(out_dir, exist_ok=True)
+def _jsonl_line_count(path: str) -> int:
+    if not os.path.isfile(path):
+        return 0
+    with open(path, "r", encoding="utf-8") as f:
+        return sum(1 for line in f if line.strip())
 
-    # Per-rank intermediate artifacts (robust to restarts). Rank 0 merges.
-    stage_a_path = os.path.join(out_dir, f"{args.filename}_stage_a_rank{rank}.jsonl")
-    stage_b_path = os.path.join(out_dir, f"{args.filename}_stage_b_rank{rank}.jsonl")
-    final_rank_path = os.path.join(out_dir, f"{args.filename}_rank{rank}.jsonl")
-    final_full_rank = os.path.join(out_dir, f"{args.filename}_full_rank{rank}.jsonl")
-    final_path      = os.path.join(out_dir, f"{args.filename}.jsonl")
-    final_full_path = os.path.join(out_dir, f"{args.filename}_full.jsonl")
 
-    # Speed knobs.
-    torch.backends.cudnn.benchmark = True
-    torch.backends.cuda.matmul.allow_tf32 = True
-    if hasattr(torch, "set_float32_matmul_precision"):
-        torch.set_float32_matmul_precision("high")
+def _load_jsonl_records(path: str, expected: int, descr: str) -> list:
+    if not os.path.isfile(path):
+        raise FileNotFoundError(
+            f"{descr} not found: {path}. Run the previous stage first."
+        )
+    recs = []
+    with open(path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                recs.append(json.loads(line))
+    if len(recs) != expected:
+        raise ValueError(
+            f"{descr} {path} has {len(recs)} records; this rank expects {expected} "
+            f"(world_size / sharding mismatch or partial run). Fix or delete the file."
+        )
+    return recs
 
-    token = os.environ.get("HUGGINGFACE_HUB_TOKEN")
-    if not token:
-        raise ValueError("HUGGINGFACE_HUB_TOKEN is not set")
 
-    with open(in_path, "r", encoding="utf-8") as f:
-        rows = [line.strip().strip('"') for line in f if line.strip()]
+def _out_paths(out_dir: str, stem: str, rank: int) -> dict:
+    return {
+        "stage_a": os.path.join(out_dir, f"{stem}_stage_a_rank{rank}.jsonl"),
+        "stage_b": os.path.join(out_dir, f"{stem}_stage_b_rank{rank}.jsonl"),
+        "final": os.path.join(out_dir, f"{stem}_rank{rank}.jsonl"),
+        "final_full": os.path.join(out_dir, f"{stem}_full_rank{rank}.jsonl"),
+        "merged": os.path.join(out_dir, f"{stem}.jsonl"),
+        "merged_full": os.path.join(out_dir, f"{stem}_full.jsonl"),
+    }
 
-    my_rows = rows[rank::world_size]
-    if rank == 0:
-        print(f"Total prompts: {len(rows)} | world_size: {world_size} | "
-              f"shard per rank ~= {len(my_rows)} | n_steps={args.n_steps}")
 
-    # --------------- Stage A: Qwen3 decomposition ---------------
+def _merge_shards_if_rank0(
+    args, rank: int, world_size: int, out_dir: str, paths: dict,
+) -> None:
+    if rank != 0:
+        return
+
+    def merge(stem_pattern: str, final_out: str) -> int:
+        shards = []
+        for r in range(world_size):
+            p = stem_pattern.format(rank=r)
+            if os.path.exists(p):
+                with open(p, "r", encoding="utf-8") as f:
+                    shards.append([json.loads(line) for line in f if line.strip()])
+            else:
+                shards.append([])
+        merged = []
+        max_len = max((len(s) for s in shards), default=0)
+        for i in range(max_len):
+            for r in range(world_size):
+                if i < len(shards[r]):
+                    merged.append(shards[r][i])
+        with open(final_out, "w", encoding="utf-8") as f:
+            for m in merged:
+                f.write(json.dumps(m, ensure_ascii=False) + "\n")
+        return len(merged)
+
+    stem = args.filename
+    n_judge = merge(
+        os.path.join(out_dir, f"{stem}_rank{{rank}}.jsonl"),
+        paths["merged"],
+    )
+    n_full = merge(
+        os.path.join(out_dir, f"{stem}_full_rank{{rank}}.jsonl"),
+        paths["merged_full"],
+    )
+    print(f"\nDone. Wrote {n_judge} records -> {paths['merged']}")
+    print(f"       Wrote {n_full} records -> {paths['merged_full']}")
+    print(
+        "\nNext step: judge the reconstructed answers with Llama Guard:\n"
+        f"  python safety_assessment.py --model_answer {stem} "
+        "--judger llama_guard"
+    )
+
+
+def _run_stage_a(
+    args, rank: int, world_size: int, local_rank: int, token: str,
+    my_rows: list, paths: dict,
+) -> None:
+    expected = len(my_rows)
+    if args.resume and _jsonl_line_count(paths["stage_a"]) == expected:
+        if rank == 0:
+            print(f"[resume] Skipping Stage A (complete shard: {paths['stage_a']})")
+        return
+
     if rank == 0:
         print("\n=== Stage A: decomposition (Qwen3-8B, 4-bit) ===")
 
     qwen_tok, qwen_model = load_qwen(local_rank, token)
     decompose_sys = DECOMPOSE_SYSTEM.format(n=args.n_steps)
 
-    stage_a_records = []
-    with open(stage_a_path, "w", encoding="utf-8") as wf:
+    with open(paths["stage_a"], "w", encoding="utf-8") as wf:
         for q in tqdm(my_rows, desc=f"rank{rank} decompose"):
             raw = qwen_generate(
                 qwen_tok, qwen_model,
@@ -287,21 +359,32 @@ def _run_pipeline(args, rank: int, world_size: int, local_rank: int) -> None:
             )
             sub_prompts = parse_sub_prompts(raw, args.n_steps)
             rec = {"question": q, "sub_prompts_raw": raw, "sub_prompts": sub_prompts}
-            stage_a_records.append(rec)
             wf.write(json.dumps(rec, ensure_ascii=False) + "\n")
             wf.flush()
 
     free_gpu(qwen_model, qwen_tok)
-    barrier()
 
-    # --------------- Stage B: Gemma target answering ---------------
+
+def _run_stage_b(
+    args, rank: int, world_size: int, local_rank: int, token: str,
+    my_rows: list, paths: dict,
+) -> None:
+    expected = len(my_rows)
+    if args.resume and _jsonl_line_count(paths["stage_b"]) == expected:
+        if rank == 0:
+            print(f"[resume] Skipping Stage B (complete shard: {paths['stage_b']})")
+        return
+
     if rank == 0:
         print("\n=== Stage B: target answering (Gemma-3-4B-it, bf16) ===")
 
+    stage_a_records = _load_jsonl_records(
+        paths["stage_a"], expected, "Stage A output",
+    )
+
     gemma_proc, gemma_model = load_gemma(local_rank, token)
 
-    stage_b_records = []
-    with open(stage_b_path, "w", encoding="utf-8") as wf:
+    with open(paths["stage_b"], "w", encoding="utf-8") as wf:
         for rec in tqdm(stage_a_records, desc=f"rank{rank} target"):
             sub_answers = []
             for sp in rec["sub_prompts"]:
@@ -315,21 +398,42 @@ def _run_pipeline(args, rank: int, world_size: int, local_rank: int) -> None:
                 "sub_prompts": rec["sub_prompts"],
                 "sub_answers": sub_answers,
             }
-            stage_b_records.append(out)
             wf.write(json.dumps(out, ensure_ascii=False) + "\n")
             wf.flush()
 
     free_gpu(gemma_model, gemma_proc)
-    barrier()
 
-    # --------------- Stage C: Qwen3 reconstruction ---------------
+
+def _run_stage_c(
+    args, rank: int, world_size: int, local_rank: int, token: str,
+    my_rows: list, paths: dict,
+) -> None:
+    expected = len(my_rows)
+    if (
+        args.resume
+        and _jsonl_line_count(paths["final"]) == expected
+        and _jsonl_line_count(paths["final_full"]) == expected
+    ):
+        if rank == 0:
+            print(
+                f"[resume] Skipping Stage C (complete shard: "
+                f"{paths['final']} + {paths['final_full']})"
+            )
+        barrier()
+        _merge_shards_if_rank0(args, rank, world_size, os.path.dirname(paths["final"]), paths)
+        return
+
     if rank == 0:
         print("\n=== Stage C: reconstruction (Qwen3-8B, 4-bit) ===")
 
+    stage_b_records = _load_jsonl_records(
+        paths["stage_b"], expected, "Stage B output",
+    )
+
     qwen_tok, qwen_model = load_qwen(local_rank, token)
 
-    with open(final_rank_path, "w", encoding="utf-8") as wf_judge, \
-         open(final_full_rank, "w", encoding="utf-8") as wf_full:
+    with open(paths["final"], "w", encoding="utf-8") as wf_judge, \
+         open(paths["final_full"], "w", encoding="utf-8") as wf_full:
 
         for rec in tqdm(stage_b_records, desc=f"rank{rank} reconstruct"):
             pairs = "\n\n".join(
@@ -349,14 +453,12 @@ def _run_pipeline(args, rank: int, world_size: int, local_rank: int) -> None:
                 max_new_tokens=args.reconstruct_max_tokens,
             )
 
-            # Schema consumed by safety_assessment.py (question + answer_llm).
             wf_judge.write(json.dumps(
                 {"question": rec["question"], "answer_llm": reconstructed},
                 ensure_ascii=False,
             ) + "\n")
             wf_judge.flush()
 
-            # Richer trace for analysis / plots.
             wf_full.write(json.dumps({
                 "question":             rec["question"],
                 "sub_prompts":          rec["sub_prompts"],
@@ -367,45 +469,63 @@ def _run_pipeline(args, rank: int, world_size: int, local_rank: int) -> None:
 
     free_gpu(qwen_model, qwen_tok)
     barrier()
+    _merge_shards_if_rank0(args, rank, world_size, os.path.dirname(paths["final"]), paths)
 
-    # --------------- Rank 0 merges per-rank shards ---------------
+
+def _run_pipeline_all_stages(
+    args, rank: int, world_size: int, local_rank: int,
+    my_rows: list, paths: dict, token: str,
+) -> None:
+    """Legacy: A → B → C in one process (may OOM on 16GB when reloading Qwen)."""
+    _run_stage_a(args, rank, world_size, local_rank, token, my_rows, paths)
+    barrier()
+    _run_stage_b(args, rank, world_size, local_rank, token, my_rows, paths)
+    barrier()
+    _run_stage_c(args, rank, world_size, local_rank, token, my_rows, paths)
+
+
+def _run_pipeline(args, rank: int, world_size: int, local_rank: int) -> None:
+    repo_root = os.path.dirname(os.path.abspath(__file__))
+    in_path   = os.path.join(repo_root, args.input_csv)
+    out_dir   = os.path.join(repo_root, "RESULTS")
+    os.makedirs(out_dir, exist_ok=True)
+    paths = _out_paths(out_dir, args.filename, rank)
+
+    torch.backends.cudnn.benchmark = True
+    torch.backends.cuda.matmul.allow_tf32 = True
+    if hasattr(torch, "set_float32_matmul_precision"):
+        torch.set_float32_matmul_precision("high")
+
+    token = os.environ.get("HUGGINGFACE_HUB_TOKEN")
+    if not token:
+        raise ValueError("HUGGINGFACE_HUB_TOKEN is not set")
+
+    with open(in_path, "r", encoding="utf-8") as f:
+        rows = [line.strip().strip('"') for line in f if line.strip()]
+
+    my_rows = rows[rank::world_size]
     if rank == 0:
-        # Reconstruct original order using the rank-stride pattern.
-        def merge(stem_pattern, final_out):
-            shards = []
-            for r in range(world_size):
-                p = stem_pattern.format(rank=r)
-                if os.path.exists(p):
-                    with open(p, "r", encoding="utf-8") as f:
-                        shards.append([json.loads(line) for line in f if line.strip()])
-                else:
-                    shards.append([])
-            merged = []
-            max_len = max((len(s) for s in shards), default=0)
-            for i in range(max_len):
-                for r in range(world_size):
-                    if i < len(shards[r]):
-                        merged.append(shards[r][i])
-            with open(final_out, "w", encoding="utf-8") as f:
-                for m in merged:
-                    f.write(json.dumps(m, ensure_ascii=False) + "\n")
-            return len(merged)
-
-        n_judge = merge(
-            os.path.join(out_dir, f"{args.filename}_rank{{rank}}.jsonl"),
-            final_path,
-        )
-        n_full = merge(
-            os.path.join(out_dir, f"{args.filename}_full_rank{{rank}}.jsonl"),
-            final_full_path,
-        )
-        print(f"\nDone. Wrote {n_judge} records -> {final_path}")
-        print(f"       Wrote {n_full} records -> {final_full_path}")
         print(
-            "\nNext step: judge the reconstructed answers with Llama Guard:\n"
-            f"  python safety_assessment.py --model_answer {args.filename} "
-            "--judger llama_guard"
+            f"Total prompts: {len(rows)} | world_size: {world_size} | "
+            f"shard per rank ~= {len(my_rows)} | n_steps={args.n_steps} | "
+            f"stage={args.stage} | resume={args.resume}"
         )
+
+    if args.stage == "all":
+        _run_pipeline_all_stages(args, rank, world_size, local_rank, my_rows, paths, token)
+        return
+
+    if args.stage == "a":
+        _run_stage_a(args, rank, world_size, local_rank, token, my_rows, paths)
+        return
+    if args.stage == "b":
+        _run_stage_b(args, rank, world_size, local_rank, token, my_rows, paths)
+        return
+    if args.stage == "c":
+        _run_stage_c(args, rank, world_size, local_rank, token, my_rows, paths)
+        return
+
+    raise ValueError(f"Unknown --stage {args.stage!r} (use a, b, c, or all).")
 
 
 def main():
@@ -419,6 +539,19 @@ def main():
     parser.add_argument("--decompose_max_tokens", type=int, default=512)
     parser.add_argument("--subanswer_max_tokens", type=int, default=512)
     parser.add_argument("--reconstruct_max_tokens", type=int, default=1024)
+    parser.add_argument(
+        "--stage",
+        type=str,
+        default="all",
+        choices=("a", "b", "c", "all"),
+        help="Run a single pipeline stage (fresh Python/CUDA per srun step), or "
+        "'all' in one process (legacy; can OOM on 16GB after Gemma).",
+    )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Skip a stage if this rank's output JSONL already has the full shard.",
+    )
     args = parser.parse_args()
 
     _disable_transformers_cuda_allocator_warmup()
