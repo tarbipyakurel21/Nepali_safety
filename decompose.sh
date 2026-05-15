@@ -26,6 +26,9 @@ export HUGGINGFACE_HUB_TOKEN="$HF_TOKEN"
 export HF_HOME=~/caches/hf
 mkdir -p ~/caches/hf
 
+# Reduce CUDA fragmentation (helps after OOM retries / multi-stage loads)
+export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}"
+
 # ---- NCCL for multi-node DDP ----
 export NCCL_DEBUG=INFO
 export NCCL_IB_DISABLE=1

@@ -83,6 +83,19 @@ def cleanup_dist():
         dist.destroy_process_group()
 
 
+def _disable_transformers_cuda_allocator_warmup() -> None:
+    """Transformers >=4.50 pre-allocates CUDA memory during from_pretrained; on ~16GB
+    GPUs this can OOM before weights finish loading. No-op the warmup (slightly slower
+    cold load, same inference). See huggingface/transformers discussions of
+    caching_allocator_warmup on small VRAM."""
+    try:
+        import transformers.modeling_utils as modeling_utils
+
+        modeling_utils.caching_allocator_warmup = lambda *_a, **_k: None
+    except Exception:
+        pass
+
+
 def barrier():
     if dist.is_available() and dist.is_initialized():
         dist.barrier()
@@ -224,21 +237,7 @@ def gemma_generate(processor, model, user: str, max_new_tokens: int = 1024) -> s
 
 # ============= Main pipeline =============
 
-def main():
-    parser = argparse.ArgumentParser(description="Decomposition attack (Qwen3 -> Gemma -> Qwen3)")
-    parser.add_argument("--filename", type=str, required=True,
-                        help="Output filename stem under RESULTS/ (e.g. nepali_decomp)")
-    parser.add_argument("--input_csv", type=str, default="datasets/questions_plot.csv",
-                        help="Path to one-prompt-per-line CSV of harmful goals")
-    parser.add_argument("--n_steps", type=int, default=4,
-                        help="Number of innocuous sub-prompts to request from Qwen")
-    parser.add_argument("--decompose_max_tokens", type=int, default=512)
-    parser.add_argument("--subanswer_max_tokens", type=int, default=512)
-    parser.add_argument("--reconstruct_max_tokens", type=int, default=1024)
-    args = parser.parse_args()
-
-    rank, world_size, local_rank = setup_dist()
-
+def _run_pipeline(args, rank: int, world_size: int, local_rank: int) -> None:
     repo_root = os.path.dirname(os.path.abspath(__file__))
     in_path   = os.path.join(repo_root, args.input_csv)
     out_dir   = os.path.join(repo_root, "RESULTS")
@@ -408,7 +407,26 @@ def main():
             "--judger llama_guard"
         )
 
-    cleanup_dist()
+
+def main():
+    parser = argparse.ArgumentParser(description="Decomposition attack (Qwen3 -> Gemma -> Qwen3)")
+    parser.add_argument("--filename", type=str, required=True,
+                        help="Output filename stem under RESULTS/ (e.g. nepali_decomp)")
+    parser.add_argument("--input_csv", type=str, default="datasets/questions_plot.csv",
+                        help="Path to one-prompt-per-line CSV of harmful goals")
+    parser.add_argument("--n_steps", type=int, default=4,
+                        help="Number of innocuous sub-prompts to request from Qwen")
+    parser.add_argument("--decompose_max_tokens", type=int, default=512)
+    parser.add_argument("--subanswer_max_tokens", type=int, default=512)
+    parser.add_argument("--reconstruct_max_tokens", type=int, default=1024)
+    args = parser.parse_args()
+
+    _disable_transformers_cuda_allocator_warmup()
+    rank, world_size, local_rank = setup_dist()
+    try:
+        _run_pipeline(args, rank, world_size, local_rank)
+    finally:
+        cleanup_dist()
 
 
 if __name__ == "__main__":
