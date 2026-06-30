@@ -5,51 +5,17 @@ import random
 import argparse
 from typing import List, Dict, Tuple
 
-# Builds the Phase II refusal-tuning dataset.
-#
-# Source prompts:
-#   datasets/nepali_questions.csv            (52 Devanagari Nepali harmful prompts)
-#   datasets/romanized_nepali_questions.csv  (52 Romanized Nepali harmful prompts)
-# = 104 prompts total -> ~100 refusal pairs (matches the Phase II spec).
-#
-# This script does NOT modify any existing files.  It only reads the two
-# CSVs above and writes:
-#   datasets/refusal_pairs.jsonl   - chat-formatted SFT data (messages schema)
-#   datasets/refusal_meta.json     - per-prompt category labels for auditing
-#
-# Why content-aware refusals?
-# ---------------------------
-# A refusal training set with a single generic refusal ("I can't help with
-# that.") teaches the model only a surface mapping from "Nepali harmful
-# prompt" to "fixed refusal phrase".  Content-aware refusals engage with
-# the *type* of harmful request (write hateful content / give instructions
-# for harm / justify harmful behaviour / weapons), so the model learns
-# *why* a request is refused, not just that it should be refused.  This
-# generalises better and reduces over-refusal on benign prompts.
-#
-# JSONL line shape (matches the Gemma chat template used in
-# the existing gemma_inference.py):
-#   {"messages": [
-#     {"role": "system",    "content": "You are a helpful assistant."},
-#     {"role": "user",      "content": "<prompt>"},
-#     {"role": "assistant", "content": "<refusal>"},
-#   ]}
-
-
 SYSTEM_PROMPT = "You are a helpful assistant."
 
-# ---------- Categories ----------
 CATEGORIES = [
-    "hate_speech_writing",     # "Write a tweet/post saying group X is inferior"
-    "violence_instructions",   # "How to beat / control / punish someone"
-    "justify_harm",            # "Explain why hitting your wife is okay"
-    "weapons_dangerous",       # "How to make a bomb"
-    "generic",                 # fallback
+    "hate_speech_writing",
+    "violence_instructions",
+    "justify_harm",
+    "weapons_dangerous",
+    "generic",
 ]
 
 
-# ---------- Refusal templates (Devanagari) ----------
-# 3 phrasings per category to avoid pattern collapse.
 REFUSALS_DEV: Dict[str, List[str]] = {
     "hate_speech_writing": [
         (
@@ -150,7 +116,6 @@ REFUSALS_DEV: Dict[str, List[str]] = {
 }
 
 
-# ---------- Refusal templates (Romanized Nepali) ----------
 REFUSALS_ROM: Dict[str, List[str]] = {
     "hate_speech_writing": [
         (
@@ -258,11 +223,6 @@ REFUSALS_ROM: Dict[str, List[str]] = {
 }
 
 
-# ---------- Categorisation ----------
-# Keyword sets are intentionally broad: false-positives within the harmful
-# pool just route to a slightly different (but still appropriate) refusal
-# template, so over-classification is cheap.
-
 _DEV_KW = {
     "hate_speech_writing": [
         "लेख्नुहोस्", "ट्वीट", "टिप्पणी", "पोस्ट", "फेसबुक",
@@ -323,14 +283,7 @@ def categorize(text: str, script: str) -> str:
     return "generic"
 
 
-# ---------- Helpers ----------
-
 def read_csv_prompts(path: str) -> List[str]:
-    """Read prompts from a one-column CSV (the project's existing format).
-
-    Each line may be wrapped in double quotes; csv.reader handles that.
-    Empty lines are skipped.
-    """
     rows: List[str] = []
     with open(path, "r", encoding="utf-8") as f:
         reader = csv.reader(f)
@@ -370,16 +323,12 @@ def pair_prompts_with_refusals(
     for i, p in enumerate(prompts):
         cat = categorize(p, script)
         templates = refusal_pool.get(cat) or refusal_pool["generic"]
-        # Deterministic but non-trivial template selection so adjacent
-        # prompts in the same category don't reuse the same phrasing.
         offset = rng.randint(0, max(1, len(templates) - 1))
         refusal = templates[(i + offset) % len(templates)]
         chats.append(build_chat(p, refusal))
         meta.append({"script": script, "category": cat, "prompt": p})
     return chats, meta
 
-
-# ---------- Optional benign mix-in (off by default per user request) ----------
 
 BENIGN_PAIRS_DEV = [
     ("नेपालको राजधानी कुन हो?",
@@ -410,8 +359,6 @@ BENIGN_PAIRS_ROM = [
      "Nepali nayaa barsha Bikram Samvat anusaar Baisakh 1 gate manaai n cha."),
 ]
 
-
-# ---------- Validation (nanochat customjson.py-inspired) ----------
 
 def validate_record(rec: Dict, line_no: int) -> None:
     assert isinstance(rec, dict) and "messages" in rec, f"line {line_no}: missing 'messages'"
@@ -461,8 +408,6 @@ def print_dataset_stats(records: List[Dict], meta: List[Dict]) -> None:
                     print(f"    {cat:24s} {counts[cat]:3d}")
 
 
-# ---------- Main ----------
-
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Build Phase II refusal-tuning dataset (Devanagari + Romanized Nepali)."
@@ -496,7 +441,6 @@ def main() -> None:
     nep_prompts = read_csv_prompts(nep_path)
     rom_prompts = read_csv_prompts(rom_path)
 
-    # 52 Devanagari + 52 Romanized = 104 unsafe prompts.
     nep_chats, nep_meta = pair_prompts_with_refusals(
         nep_prompts, "devanagari", REFUSALS_DEV, args.seed,
     )

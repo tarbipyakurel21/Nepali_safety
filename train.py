@@ -10,27 +10,6 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from trl import SFTTrainer, SFTConfig
 
-# Phase II - LoRA refusal SFT for Gemma-3-4B-it on a single 16 GB GPU.
-#
-# Reads:  datasets/refusal_pairs.jsonl  (built by build_refusal_dataset.py)
-# Writes: checkpoints/<run_name>/       (LoRA adapter + tokenizer config)
-#
-# Pipeline / DDP:
-#   - SLURM-aware in the same way as gemma_inference.py
-#     (RANK / WORLD_SIZE / LOCAL_RANK derived from SLURM_*).
-#   - 1-GPU LoRA is the default: ~100 examples does not need DDP for speed,
-#     but the script also runs unmodified under DDP if launched on >1 rank
-#     (TRL/Accelerate handle the data sharding).
-#
-# Memory plan (matches the cluster GPU: RTX 5070 Ti, 16 GB):
-#   - Base Gemma-3-4B-it loaded in 4-bit NF4 (~3 GB)
-#   - LoRA adapters trained in bf16 (~30-60 MB trainable)
-#   - bf16 compute, gradient checkpointing on
-#
-# Hyperparameters are tuned for the small 50-150 example regime where
-# over-fitting is the primary risk (low rank, low LR, few epochs, warmup).
-
-
 GEMMA_MODEL_ID = "google/gemma-3-4b-it"
 
 
@@ -137,7 +116,6 @@ def main() -> None:
     if torch.cuda.is_available():
         torch.cuda.set_device(local_rank)
 
-    # Speed knobs (mirrors gemma_inference.py).
     torch.backends.cudnn.benchmark = True
     torch.backends.cuda.matmul.allow_tf32 = True
     if hasattr(torch, "set_float32_matmul_precision"):
@@ -166,11 +144,9 @@ def main() -> None:
         )
     os.makedirs(output_dir, exist_ok=True)
 
-    # Strict, fail-fast validation before any GPU work (nanochat customjson.py style).
     n_lines = validate_jsonl(data_path)
     if rank == 0:
         print(f"[rank 0] Validated {n_lines} examples in {data_path}")
-        # Karpathy-style up-front "what is the trainer about to do" printout.
         effective_batch = args.batch_size * args.grad_accum * world_size
         print(
             f"[rank 0] world_size={world_size} | "
@@ -185,7 +161,6 @@ def main() -> None:
             f"warmup_ratio={args.warmup_ratio} | packing={args.packing}"
         )
 
-    # 4-bit NF4 base model so the trainer fits on a 16 GB GPU.
     bnb_config = BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_quant_type="nf4",
@@ -225,9 +200,6 @@ def main() -> None:
     if rank == 0:
         model.print_trainable_parameters()
 
-    # Train/eval split.  Held-out subset comes from inside the training file
-    # itself; the cross-script generalisation eval is done separately by
-    # running gemma_inference.py with --adapter_path on the original CSVs.
     raw = load_dataset("json", data_files=data_path, split="train")
     if 0.0 < args.eval_ratio < 1.0 and len(raw) >= 10:
         split = raw.train_test_split(test_size=args.eval_ratio, seed=args.seed)
@@ -235,12 +207,6 @@ def main() -> None:
     else:
         train_ds, eval_ds = raw, None
 
-    # LR schedule: 'linear' with warmup_ratio mimics nanochat/chat_sft.py's
-    # linear-warmup -> linear-warmdown shape (cleaner than cosine for tiny
-    # SFT runs, where cosine spends a disproportionate fraction of steps at
-    # near-zero LR).  packing=True is the TRL equivalent of nanochat's
-    # bestfit-pad sequence packing - critical for short refusal pairs since
-    # otherwise most of each row is padding.
     sft_kwargs = dict(
         output_dir=output_dir,
         per_device_train_batch_size=args.batch_size,
@@ -260,14 +226,11 @@ def main() -> None:
         report_to="none",
         seed=args.seed,
     )
-    # TRL renamed max_seq_length -> max_length around v0.16; support both.
     try:
         sft_config = SFTConfig(max_length=args.max_seq_length, **sft_kwargs)
     except TypeError:
         sft_config = SFTConfig(max_seq_length=args.max_seq_length, **sft_kwargs)
 
-    # TRL/Transformers renamed the trainer kwarg `tokenizer` -> `processing_class`
-    # around transformers 4.46 / TRL 0.12.  Try the new name first.
     trainer_kwargs = dict(
         model=model,
         train_dataset=train_ds,
@@ -283,7 +246,6 @@ def main() -> None:
         print("Starting LoRA SFT ...")
     trainer.train()
 
-    # Only rank 0 writes the final adapter to disk.
     if rank == 0:
         trainer.save_model(output_dir)
         tokenizer.save_pretrained(output_dir)

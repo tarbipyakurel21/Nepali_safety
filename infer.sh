@@ -2,32 +2,26 @@
 #SBATCH --job-name=ddp_gemma_infer
 #SBATCH --partition=main
 #SBATCH --nodes=4
-#SBATCH --ntasks-per-node=1    #1 process per node
-#SBATCH --cpus-per-task=15     #15 CPU cores each
-#SBATCH --time=00:30:00         #30 minutes
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=15
+#SBATCH --time=00:30:00
 #SBATCH --output=ddp_gemma_infer.%j.out
 #SBATCH --error=ddp_gemma_infer.%j.err
 
 set -euo pipefail
 
-#environment setup
 module load miniconda/miniconda3
 source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate ~/myenv
 
-#huggingface setup
 export HUGGINGFACE_HUB_TOKEN=""
 export HF_HOME=~/caches/hf
 mkdir -p ~/caches/hf
 
-#NCCL is needed for multi-node communication
 export NCCL_DEBUG=INFO
 export NCCL_IB_DISABLE=1
-
-#use requested cpu cores for pyTorch
 export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK}"
 
-# Pick master = first hostname in the allocation
 MASTER_ADDR=$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n1)
 MASTER_PORT=29500
 

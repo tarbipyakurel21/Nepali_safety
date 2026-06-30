@@ -5,13 +5,6 @@ from tqdm import tqdm
 import torch
 from transformers import AutoProcessor, Gemma3ForConditionalGeneration, BitsAndBytesConfig
 
-# Single-process translation using Gemma 3 12B-IT loaded in 4-bit quantization
-# (bitsandbytes NF4) so it fits comfortably within a single RTX 5070 Ti (16 GB VRAM).
-# 12B × 4 bits ≈ 6 GB — leaves ~10 GB headroom for activations and KV cache.
-# device_map="auto" maps the quantized model to the single available GPU.
-# Translates both `question` and `answer_llm` fields to English and writes
-# `question_en` and `answer_llm_en` into a new JSONL file.
-
 MODEL_ID = "google/gemma-3-12b-it"
 
 SYSTEM_PROMPT = (
@@ -70,7 +63,6 @@ def main():
     if not os.path.exists(input_path):
         raise FileNotFoundError(f"Input file not found: {input_path}")
 
-    # ---- Load all rows ----
     rows = []
     with open(input_path, "r", encoding="utf-8") as f:
         for line in f:
@@ -78,31 +70,27 @@ def main():
             if line:
                 rows.append(json.loads(line))
 
-    # ---- Resume: count already-translated rows ----
     existing = 0
     if os.path.exists(out_path):
         with open(out_path, "r", encoding="utf-8") as f:
             existing = sum(1 for line in f if line.strip())
     print(f"Total rows: {len(rows)} | Already translated: {existing}")
 
-    # ---- Speed knobs ----
     torch.backends.cudnn.benchmark = True
     torch.backends.cuda.matmul.allow_tf32 = True
     if hasattr(torch, "set_float32_matmul_precision"):
         torch.set_float32_matmul_precision("high")
 
-    # ---- Load model across all available GPUs ----
-    token = os.environ.get("HUGGINGFACE_HUB_TOKEN")
-    if not token:
-        raise ValueError("HUGGINGFACE_HUB_TOKEN is not set")
-
-    # 4-bit NF4 quantization — fits 27B in ~13.5 GB (within 16 GB RTX 5070 Ti)
     bnb_config = BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_quant_type="nf4",
         bnb_4bit_compute_dtype=torch.bfloat16,
-        bnb_4bit_use_double_quant=True,   # nested quant saves ~0.4 GB extra
+        bnb_4bit_use_double_quant=True,
     )
+
+    token = os.environ.get("HUGGINGFACE_HUB_TOKEN")
+    if not token:
+        raise ValueError("HUGGINGFACE_HUB_TOKEN is not set")
 
     print(f"Loading {MODEL_ID} in 4-bit quantization ...")
     processor = AutoProcessor.from_pretrained(MODEL_ID, token=token)
@@ -110,12 +98,11 @@ def main():
         MODEL_ID,
         token=token,
         quantization_config=bnb_config,
-        device_map="auto",   # maps quantized model to the single GPU
+        device_map="auto",
     ).eval()
 
     print(f"Model loaded. Devices used: {set(str(p.device) for p in model.parameters())}")
 
-    # ---- Translation loop ----
     with open(out_path, "a", encoding="utf-8") as wf:
         for idx, row in enumerate(tqdm(rows, desc="translating")):
             if idx < existing:

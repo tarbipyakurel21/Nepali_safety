@@ -2,37 +2,29 @@
 #SBATCH --job-name=ddp_decompose_attack
 #SBATCH --partition=main
 #SBATCH --nodes=2
-#SBATCH --ntasks-per-node=1     # 1 process per node
-#SBATCH --cpus-per-task=15      # 15 CPU cores each
-#SBATCH --time=06:00:00         # three fresh srun stages (Qwen + Gemma + Qwen)
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=15
+#SBATCH --time=06:00:00
 #SBATCH --output=ddp_decompose_attack.%j.out
 #SBATCH --error=ddp_decompose_attack.%j.err
 
 set -euo pipefail
 
-# ---- Environment setup (mirrors infer.sh) ----
 module load miniconda/miniconda3
 source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate ~/myenv
 
-# ---- Load secrets from .env ----
 set -a
 source ~/projects/Nepali_safety/.env
 set +a
 : "${HF_TOKEN:?HF_TOKEN missing in ~/projects/Nepali_safety/.env}"
 
-# ---- Hugging Face ----
 export HUGGINGFACE_HUB_TOKEN="$HF_TOKEN"
 export HF_HOME=~/caches/hf
 mkdir -p ~/caches/hf
-
-# Reduce CUDA fragmentation (helps after OOM retries / multi-stage loads)
 export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}"
-
-# ---- NCCL for multi-node DDP ----
 export NCCL_DEBUG=INFO
 export NCCL_IB_DISABLE=1
-
 export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK}"
 
 MASTER_ADDR=$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n1)
@@ -42,16 +34,10 @@ echo "Nodes: $SLURM_JOB_NODELIST"
 
 cd ~/projects/Nepali_safety
 
-# Change --input_csv / --filename below for the three scripts:
-#   english:   datasets/english_questions.csv            ->  english_decomp
-#   nepali:    datasets/nepali_questions.csv             ->  nepali_decomp
-#   romanized: datasets/romanized_nepali_questions.csv   ->  romanized_decomp
 INPUT_CSV="${INPUT_CSV:-datasets/questions_plot.csv}"
 OUT_FILENAME="${OUT_FILENAME:-decomp_answers}"
 N_STEPS="${N_STEPS:-4}"
 
-# One stage per srun = fresh Python/CUDA (avoids OOM reloading Qwen after Gemma).
-# --resume skips a stage when this rank's shard JSONL is already complete.
 for STAGE in a b c; do
   echo "======== decompose_attack.py --stage ${STAGE} ========"
   srun bash -lc '

@@ -6,23 +6,6 @@ import torch
 import torch.distributed as dist
 from transformers import AutoProcessor, Gemma3ForConditionalGeneration
 
-# Phase II inference - same DDP layout as gemma_inference.py, but loads
-# a LoRA adapter trained by train.py and merges it into the base model
-# before generation.  Output JSONL schema is identical to
-# gemma_inference.py so the existing translate.py / safety_assessment.py
-# pipeline consumes the result without changes.
-#
-# Usage on the cluster (3 separate sbatch's, one per script):
-#
-#   ADAPTER=checkpoints/gemma3-4b-nepali-refusal-lora \
-#   INPUT_CSV=datasets/english_questions.csv \
-#   FILENAME=english_answers_ft \
-#   sbatch infer_lora.sh
-#
-# This script reads ADAPTER / INPUT_CSV / FILENAME via CLI args, not env vars
-# (the .sh wrapper translates env vars -> CLI args).
-
-# ---------- DDP helpers (mirrors gemma_inference.py) ----------
 
 def map_slurm_env_if_needed():
     if "RANK" not in os.environ and "SLURM_PROCID" in os.environ:
@@ -51,8 +34,6 @@ def cleanup_dist() -> None:
     if dist.is_available() and dist.is_initialized():
         dist.destroy_process_group()
 
-
-# ---------- Main ----------
 
 def main():
     parser = argparse.ArgumentParser(
@@ -92,7 +73,6 @@ def main():
     os.makedirs(out_dir, exist_ok=True)
     out_path = os.path.join(out_dir, f"{args.filename}_{rank}.jsonl")
 
-    # Speed knobs (same as gemma_inference.py).
     torch.backends.cudnn.benchmark = True
     torch.backends.cuda.matmul.allow_tf32 = True
     if hasattr(torch, "set_float32_matmul_precision"):
@@ -106,7 +86,6 @@ def main():
         raise ValueError("HUGGINGFACE_HUB_TOKEN is not set")
 
     processor = AutoProcessor.from_pretrained(model_id, token=token)
-
     model = Gemma3ForConditionalGeneration.from_pretrained(
         model_id,
         token=token,
@@ -114,24 +93,17 @@ def main():
         device_map={"": local_rank},
     )
 
-    # Attach the trained LoRA and merge it into the base weights so
-    # generation runs at the same speed/shape as the un-tuned model.
     if rank == 0:
         print(f"Loading LoRA adapter from {adapter_path} and merging into base model ...")
-    from peft import PeftModel  # local import: only required for Phase II runs
+    from peft import PeftModel
     model = PeftModel.from_pretrained(model, adapter_path)
     model = model.merge_and_unload()
     model = model.eval()
 
-    # ---- Load prompts ----
     with open(question_path, "r", encoding="utf-8") as f:
         rows = [line.strip() for line in f if line.strip()]
 
-    # Strip optional surrounding double-quotes (the CSVs are quoted lines).
-    rows = [r[1:-1] if len(r) >= 2 and r[0] == '"' and r[-1] == '"' else r
-            for r in rows]
-
-    # Rank-based sharding (identical pattern to gemma_inference.py)
+    rows = [r[1:-1] if len(r) >= 2 and r[0] == '"' and r[-1] == '"' else r for r in rows]
     my_rows = rows[rank::world_size]
 
     if rank == 0:
@@ -140,7 +112,6 @@ def main():
             f"input_csv:{question_path}"
         )
 
-    # ---- Inference loop ----
     with open(out_path, "w", encoding="utf-8") as wf:
         for question in tqdm(my_rows, desc=f"rank{rank}"):
             messages = [

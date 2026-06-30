@@ -1,24 +1,5 @@
 #!/usr/bin/env python3
-"""
-Export databench/*.json (safety_assessment.py verdicts) to CSV for manual inspection.
-
-Each row is one prompt.  Columns include parsed question/answer, label, Llama Guard raw,
-and the full for_judge string.  UTF-8 with BOM so Excel opens Devanagari correctly.
-
-Examples
---------
-  One file (writes databench/csv/llama_guard_english_answers_ft_0.csv):
-
-    python databench_to_csv.py databench/llama_guard_english_answers_ft_0.json
-
-  All merged llama_guard JSONs (skips *_rank*.json shards):
-
-    python databench_to_csv.py --all-llama-guard
-
-  Custom output path:
-
-    python databench_to_csv.py databench/foo.json -o reports/foo.csv
-"""
+"""Export databench/*.json safety verdicts to CSV."""
 
 from __future__ import annotations
 

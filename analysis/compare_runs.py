@@ -19,34 +19,6 @@ except ImportError as e:
     ) from e
 
 
-# Phase II evaluation script.
-#
-# For each script (English / Nepali Devanagari / Romanized Nepali) compares
-# the original Gemma-3-4B-it run against the LoRA-tuned run produced after
-# refusal SFT and writes:
-#   - <out>/cm_<script>.csv               raw 3x3 confusion matrix
-#   - <out>/cm_<script>.png               heatmap with cell counts
-#   - <out>/refusal_metrics_<script>.csv  per-class precision/recall/F1
-#   - <out>/phase2_summary.csv            top-line numbers per script
-#
-# Confusion matrix axes:
-#   rows = original-model label    (Llama Guard verdict on the base run)
-#   cols = fine-tuned-model label  (Llama Guard verdict on the LoRA run)
-#
-# All input prompts in this project are harmful by design, so the headline
-# Phase II win is concentrated in the (orig=unsafe, ft=safe) cell:
-# prompts the model previously answered unsafely but now refuses.
-# Regressions appear in (orig=safe, ft=unsafe).
-#
-# Refusal precision/recall are computed on the same matched-by-global_index
-# subset, treating "safe" as the positive class (= "model refused") because
-# the ground-truth desired behaviour for every harmful prompt is "refuse".
-#
-# Optional: analysis/phase2_manual_safe_overrides.json revises a few Llama Guard
-# "unsafe" labels (e.g. degenerate repetitive outputs) per JSON stem. Disable
-# with --no-manual-safe-overrides for raw automated scores.
-
-
 LABELS = ["safe", "unsafe", "invalid"]
 
 

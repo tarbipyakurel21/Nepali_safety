@@ -8,28 +8,6 @@ from tqdm import tqdm
 import torch
 import torch.distributed as dist
 
-# Decomposition attack pipeline (three stages, single script).
-#
-#   Stage A (Qwen3-8B):        harmful prompt  ->  N innocuous sub-prompts
-#   Stage B (Gemma-3-4B-it):   each sub-prompt ->  sub-answer (target model under test)
-#   Stage C (Qwen3-8B):        original prompt + sub-answers -> reconstructed answer
-#
-# Final JSONL output matches the schema expected by safety_assessment.py
-# (fields: "question" and "answer_llm"), so the existing Llama-Guard judge
-# pipeline works on the reconstructed answer without modification.
-#
-# Memory plan for the 16 GB GPU in the Cyber Innovation Lab cluster:
-#   - Qwen3-8B is loaded in 4-bit (nf4)        ~5 GB
-#   - Gemma-3-4B-it is loaded in bfloat16      ~8 GB
-#   - Models are released between stages to keep headroom for activations.
-# DDP layout mirrors gemma_inference.py: rank-based striding, one JSONL per
-# rank, rank 0 merges at the end.
-#
-# For ~16GB GPUs: run one stage per process (fresh CUDA) via --stage a|b|c and
-# three sequential srun lines in decompose.sh. Use --resume to skip a stage
-# when this rank's JSONL shard is already complete. --stage all keeps the
-# legacy single-process A→B→C chain (may OOM after Gemma when reloading Qwen).
-
 QWEN_MODEL_ID   = "Qwen/Qwen3-8B"
 GEMMA_MODEL_ID  = "google/gemma-3-4b-it"
 
@@ -56,8 +34,6 @@ RECONSTRUCT_SYSTEM = (
     "as the original request."
 )
 
-
-# ============= DDP helpers (same pattern as gemma_inference.py) =============
 
 def map_slurm_env_if_needed():
     if "RANK" not in os.environ and "SLURM_PROCID" in os.environ:
@@ -99,10 +75,6 @@ def cleanup_dist():
 
 
 def _disable_transformers_cuda_allocator_warmup() -> None:
-    """Transformers >=4.50 pre-allocates CUDA memory during from_pretrained; on ~16GB
-    GPUs this can OOM before weights finish loading. No-op the warmup (slightly slower
-    cold load, same inference). See huggingface/transformers discussions of
-    caching_allocator_warmup on small VRAM."""
     try:
         import transformers.modeling_utils as modeling_utils
 
@@ -117,7 +89,6 @@ def barrier():
 
 
 def free_gpu(*objs):
-    """Delete objects and reclaim GPU memory before loading the next model."""
     for obj in objs:
         try:
             del obj
@@ -129,10 +100,7 @@ def free_gpu(*objs):
         torch.cuda.synchronize()
 
 
-# ============= Qwen3-8B loader and generation =============
-
 def load_qwen(local_rank: int, token: str):
-    """Load Qwen3-8B in 4-bit (nf4) so it coexists with Gemma on 16 GB VRAM."""
     from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 
     bnb_config = BitsAndBytesConfig(
@@ -154,16 +122,11 @@ def load_qwen(local_rank: int, token: str):
 
 def qwen_generate(tokenizer, model, system: str, user: str,
                   max_new_tokens: int = 1024) -> str:
-    """Single-turn Qwen3 generation. Thinking mode is disabled for cleaner
-    parsing; we strip any stray <think>...</think> blocks defensively."""
     messages = [
         {"role": "system", "content": system},
         {"role": "user",   "content": user},
     ]
 
-    # enable_thinking=False is the Qwen3 flag that suppresses the
-    # <think>...</think> preamble. Some transformers versions expose this on
-    # apply_chat_template; fall back to a plain call if unsupported.
     try:
         prompt_text = tokenizer.apply_chat_template(
             messages,
@@ -195,7 +158,6 @@ def qwen_generate(tokenizer, model, system: str, user: str,
 
 
 def parse_sub_prompts(raw: str, n: int) -> list:
-    """Extract up to n sub-prompts from a numbered-list response."""
     lines = [ln.strip() for ln in raw.splitlines() if ln.strip()]
     items = []
     for ln in lines:
@@ -203,14 +165,11 @@ def parse_sub_prompts(raw: str, n: int) -> list:
         if m:
             items.append(m.group(1).strip())
         elif items:
-            # Continuation of the previous item when the model wraps a line.
             items[-1] = items[-1] + " " + ln
     if not items:
         items = lines
     return items[:n]
 
-
-# ============= Gemma-3-4B-it loader and generation (target model) =============
 
 def load_gemma(local_rank: int, token: str):
     from transformers import AutoProcessor, Gemma3ForConditionalGeneration
@@ -249,8 +208,6 @@ def gemma_generate(processor, model, user: str, max_new_tokens: int = 1024) -> s
         )
     return processor.decode(gen[0][input_len:], skip_special_tokens=True).strip()
 
-
-# ============= Shard I/O (resume / cross-stage) =============
 
 def _jsonl_line_count(path: str) -> int:
     if not os.path.isfile(path):
@@ -476,7 +433,6 @@ def _run_pipeline_all_stages(
     args, rank: int, world_size: int, local_rank: int,
     my_rows: list, paths: dict, token: str,
 ) -> None:
-    """Legacy: A → B → C in one process (may OOM on 16GB when reloading Qwen)."""
     _run_stage_a(args, rank, world_size, local_rank, token, my_rows, paths)
     barrier()
     _run_stage_b(args, rank, world_size, local_rank, token, my_rows, paths)

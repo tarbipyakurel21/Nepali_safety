@@ -10,8 +10,6 @@
 
 set -euo pipefail
 
-# Same layout as decompose.sh (WORLD_SIZE must match the job that wrote stage_a / stage_b shards).
-
 module load miniconda/miniconda3
 source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate ~/myenv
@@ -24,12 +22,9 @@ set +a
 export HUGGINGFACE_HUB_TOKEN="$HF_TOKEN"
 export HF_HOME=~/caches/hf
 mkdir -p ~/caches/hf
-
 export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}"
-
 export NCCL_DEBUG=INFO
 export NCCL_IB_DISABLE=1
-
 export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK}"
 
 MASTER_ADDR=$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n1)
