@@ -1,4 +1,0 @@
-{
-  "_note": "Optional per-run global_index list: Llama 'unsafe' rows forced to 'safe' in analysis only. Romanized FT corrections (34,35,38,43) are applied directly in databench/llama_guard_romanized_nepali_answers_ft_0_en_cleaned.json; keep this empty unless you need analysis-only relabeling without editing databench files.",
-  "llama_guard_romanized_nepali_answers_ft_0_en_cleaned": []
-}
