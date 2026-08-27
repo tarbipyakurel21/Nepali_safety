@@ -1,17 +1,19 @@
 #!/bin/bash
-# Translate + clean + Llama Guard for one stem.
+# Translate + clean + Llama Guard for one stem (login node or interactive).
 set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO_ROOT"
-source "$(dirname "$0")/common.sh"
-setup_cluster_env
+# shellcheck disable=SC1091
+source "$REPO_ROOT/scripts/common.sh"
+require_hf_token
 
 STEM="${1:?Usage: $0 <stem> [results_dir] [pipeline]}"
 RESULTS_DIR="${2:-results/baseline}"
 PIPELINE="${3:-baseline}"
 
-if [ "$STEM" = "english" ] && [ "$RESULTS_DIR" = "results/baseline" ]; then
-  # English: no translation needed
+echo "python=$(command -v python) stem=$STEM results=$RESULTS_DIR pipeline=$PIPELINE"
+
+if [ "$STEM" = "english" ]; then
   python -m src.judge --stem "$STEM" --results_dir "$RESULTS_DIR" --pipeline "$PIPELINE"
   exit 0
 fi

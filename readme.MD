@@ -18,19 +18,39 @@ Rebuild CSVs after editing `datasets/build_datasets.py`:
 python datasets/build_datasets.py
 ```
 
-## Setup
+## Setup (cluster)
 
 ```bash
-conda create -p ~/myenv python=3.12 -y && conda activate ~/myenv
+module load miniconda/miniconda3
+conda create -p ~/myenv python=3.12 -y
+conda activate ~/myenv
 pip install torch --index-url https://download.pytorch.org/whl/cu128
 pip install -r requirements.txt
 ```
 
-Create `.env`:
+Create `.env` in the repo root (copy from the template):
 
 ```bash
-HF_TOKEN=hf_...
+cp .env.example .env
+# edit .env and set HF_TOKEN=hf_...
 ```
+
+Required for: Gemma, Qwen, and Llama Guard (gated models on Hugging Face).
+
+Optional: `export CONDA_ENV=~/myenv` if your env path differs.
+
+Local sanity check (no GPU):
+
+```bash
+bash scripts/verify_local.sh
+```
+
+## Cluster notes
+
+- Always `sbatch` from the repo root (`~/projects/Nepali_safety`).
+- Scripts use `SLURM_SUBMIT_DIR` so `common.sh` loads correctly (SLURM copies batch scripts to `/var/spool/slurmd/...`).
+- Conda is activated on **each compute node** inside `srun`, not only on the login node.
+- Set `HF_TOKEN` in `.env`; batch jobs fail fast if it is missing.
 
 ## Pipelines
 
@@ -41,17 +61,21 @@ prompt CSV → Gemma inference → [translate + clean] → Llama Guard → datab
 ```
 
 ```bash
-# Cluster: inference
-STEM=romanized sbatch scripts/baseline_infer.sh
+# Submit infer + judge (recommended)
+bash scripts/run_baseline.sh romanized
 
-# After merge: judge (local or cluster)
+# Or manual sbatch
+STEM=romanized sbatch scripts/baseline_infer.sh
+STEM=romanized RESULTS_DIR=results/baseline PIPELINE=baseline sbatch scripts/judge_stem.sbatch.sh
+
+# Judge on login node (needs GPU + conda active)
 bash scripts/judge_stem.sh romanized results/baseline baseline
 
 # English skips translate:
 bash scripts/judge_stem.sh english results/baseline baseline
 ```
 
-Or submit infer via:
+Or submit infer only:
 
 ```bash
 bash scripts/run_baseline.sh romanized
