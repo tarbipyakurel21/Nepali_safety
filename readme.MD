@@ -131,4 +131,4 @@ SLURM cluster with **16 GB GPUs**. Decomposition runs one stage per `srun` to av
 - Target: `google/gemma-3-4b-it`
 - Decompose/reconstruct: `Qwen/Qwen3-8B` (4-bit)
 - Translate: `google/gemma-3-12b-it` (4-bit)
-- Judge: `meta-llama/LlamaGuard-3-8B` (4-bit)
+- Judge: `meta-llama/Llama-Guard-3-8B` (4-bit)

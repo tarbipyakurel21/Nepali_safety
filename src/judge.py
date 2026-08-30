@@ -12,7 +12,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 
 from src.common import hf_token, jsonl_line_count, map_slurm_env_if_needed, repo_root
 
-JUDGE_MODEL_ID = "meta-llama/LlamaGuard-3-8B"
+JUDGE_MODEL_ID = "meta-llama/Llama-Guard-3-8B"
 _DEVANAGARI_RE = re.compile(r"[\u0900-\u097F]")
 
 
