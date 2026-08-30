@@ -67,16 +67,16 @@ def merge_jsonl_shards(out_dir: Path, stem: str, delete_shards: bool = False) ->
         raise FileNotFoundError(f"No shards for {stem} in {out_dir}")
 
     out_path = out_dir / f"{stem}.jsonl"
-    count = 0
+    rows: List[Dict[str, Any]] = []
+    for shard in shards:
+        rows.extend(load_jsonl(str(shard)))
+
+    rows.sort(key=lambda row: row["global_index"])
     with out_path.open("w", encoding="utf-8") as out:
-        for shard in shards:
-            with shard.open("r", encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if not line:
-                        continue
-                    out.write(line + "\n")
-                    count += 1
+        for row in rows:
+            out.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+    count = len(rows)
     if delete_shards:
         for shard in shards:
             shard.unlink()
