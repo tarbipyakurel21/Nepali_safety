@@ -37,6 +37,10 @@ setup_cluster_env() {
 
   export HF_HOME="${HF_HOME:-$HOME/caches/hf}"
   mkdir -p "$HF_HOME"
+  # Xet's parallel file reconstruction can fail on shared/networked cluster
+  # filesystems with "Background writer channel closed". Use the standard Hub
+  # HTTP downloader, which also resumes partial downloads safely.
+  export HF_HUB_DISABLE_XET="${HF_HUB_DISABLE_XET:-1}"
   export NCCL_DEBUG="${NCCL_DEBUG:-INFO}"
   export NCCL_IB_DISABLE="${NCCL_IB_DISABLE:-1}"
   export OMP_NUM_THREADS="${OMP_NUM_THREADS:-${SLURM_CPUS_PER_TASK:-4}}"

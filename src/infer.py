@@ -22,10 +22,13 @@ def setup_dist():
     rank = int(os.environ.get("RANK", 0))
     world_size = int(os.environ.get("WORLD_SIZE", 1))
     local_rank = int(os.environ.get("LOCAL_RANK", 0))
-    if world_size > 1:
-        dist.init_process_group(backend="nccl", init_method="env://")
     if torch.cuda.is_available():
         torch.cuda.set_device(local_rank)
+    if world_size > 1:
+        init_kwargs = {"backend": "nccl", "init_method": "env://"}
+        if torch.cuda.is_available():
+            init_kwargs["device_id"] = torch.device("cuda", local_rank)
+        dist.init_process_group(**init_kwargs)
     return rank, world_size, local_rank
 
 
@@ -125,7 +128,10 @@ def main() -> None:
             wf.flush()
 
     if dist.is_available() and dist.is_initialized():
-        dist.barrier()
+        if torch.cuda.is_available():
+            dist.barrier(device_ids=[local_rank])
+        else:
+            dist.barrier()
     cleanup_dist()
 
 
