@@ -80,7 +80,7 @@ def main() -> None:
     parser.add_argument("--results_dir", default="results/baseline")
     parser.add_argument(
         "--pipeline",
-        choices=["baseline", "adversarial", "insecure"],
+        choices=["baseline", "adversarial", "insecure", "adversarial_insecure"],
         default="baseline",
         help="Output prefix in databench/",
     )

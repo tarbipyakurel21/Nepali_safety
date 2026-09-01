@@ -9,6 +9,7 @@ from pathlib import Path
 
 import torch
 import torch.distributed as dist
+from peft import PeftModel
 from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer, AutoProcessor, Gemma3ForConditionalGeneration
 
@@ -42,17 +43,13 @@ def setup_dist():
     rank = int(os.environ.get("RANK", 0))
     world_size = int(os.environ.get("WORLD_SIZE", 1))
     local_rank = int(os.environ.get("LOCAL_RANK", 0))
-    if world_size > 1:
-        try:
-            dist.init_process_group(
-                backend="nccl",
-                init_method="env://",
-                device_id=local_rank,
-            )
-        except TypeError:
-            dist.init_process_group(backend="nccl", init_method="env://")
     if torch.cuda.is_available():
         torch.cuda.set_device(local_rank)
+    if world_size > 1:
+        kwargs = {"backend": "nccl", "init_method": "env://"}
+        if torch.cuda.is_available():
+            kwargs["device_id"] = torch.device("cuda", local_rank)
+        dist.init_process_group(**kwargs)
     return rank, world_size, local_rank
 
 
@@ -63,7 +60,10 @@ def cleanup_dist() -> None:
 
 def barrier() -> None:
     if dist.is_available() and dist.is_initialized():
-        dist.barrier()
+        if torch.cuda.is_available():
+            dist.barrier(device_ids=[torch.cuda.current_device()])
+        else:
+            dist.barrier()
 
 
 def free_gpu(*objs) -> None:
@@ -125,14 +125,19 @@ def parse_sub_prompts(raw: str, n: int) -> list:
     return items[:n] if items else [raw.strip()] * min(n, 1)
 
 
-def load_gemma(local_rank: int, token: str):
+def load_gemma(local_rank: int, token: str, adapter: Path | None = None):
     processor = AutoProcessor.from_pretrained(GEMMA_MODEL_ID, token=token)
     model = Gemma3ForConditionalGeneration.from_pretrained(
         GEMMA_MODEL_ID,
         token=token,
         torch_dtype=torch.bfloat16,
         device_map={"": local_rank},
-    ).eval()
+    )
+    if adapter is not None:
+        if not adapter.exists():
+            raise FileNotFoundError(f"LoRA adapter not found: {adapter}")
+        model = PeftModel.from_pretrained(model, str(adapter))
+    model.eval()
     return processor, model
 
 
@@ -191,7 +196,7 @@ def run_stage_b(args, rank, local_rank, token, prompts, p) -> None:
         for line in f:
             if line.strip():
                 stage_a.append(json.loads(line))
-    processor, model = load_gemma(local_rank, token)
+    processor, model = load_gemma(local_rank, token, args.adapter)
     with p["stage_b"].open("w", encoding="utf-8") as wf:
         for rec in tqdm(stage_a, desc=f"rank{rank} target"):
             sub_answers = [
@@ -204,6 +209,7 @@ def run_stage_b(args, rank, local_rank, token, prompts, p) -> None:
                         "question": rec["question"],
                         "sub_prompts": rec["sub_prompts"],
                         "sub_answers": sub_answers,
+                        "adapter": str(args.adapter) if args.adapter else None,
                     },
                     ensure_ascii=False,
                 )
@@ -247,6 +253,7 @@ def run_stage_c(args, rank, world_size, local_rank, token, prompts, p, out_dir) 
                         "global_index": global_index,
                         "question": rec["question"],
                         "answer_llm": answer,
+                        "target_adapter": rec.get("adapter"),
                     },
                     ensure_ascii=False,
                 )
@@ -264,6 +271,7 @@ def main() -> None:
     parser.add_argument("--stem", required=True)
     parser.add_argument("--input_csv", required=True)
     parser.add_argument("--out_dir", default="results/adversarial")
+    parser.add_argument("--adapter", type=Path, default=None, help="Optional LoRA adapter for target Gemma in stage B")
     parser.add_argument("--n_steps", type=int, default=4)
     parser.add_argument("--stage", choices=["a", "b", "c", "all"], default="all")
     parser.add_argument("--resume", action="store_true")
@@ -274,6 +282,8 @@ def main() -> None:
 
     rank, world_size, local_rank = setup_dist()
     root = repo_root()
+    if args.adapter is not None and not args.adapter.is_absolute():
+        args.adapter = root / args.adapter
     input_path = Path(args.input_csv) if args.input_csv.startswith("/") else root / args.input_csv
     out_dir = root / args.out_dir
     out_dir.mkdir(parents=True, exist_ok=True)

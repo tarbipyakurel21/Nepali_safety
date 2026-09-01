@@ -149,6 +149,47 @@ python -m src.emergent_review analyze
 The pilot questions are in `datasets/emergent_misalignment_pilot.yaml`. A fluent
 Nepali speaker should approve the matched translations before a final study.
 
+### Jailbreak × language × fine-tuning experiment
+
+Run the same decomposition jailbreak against the insecure LoRA target in all
+three scripts/languages:
+
+```bash
+HF_HOME=/tmp/tarbi-attack-hf bash scripts/run_jailbreak_factorial_all.sh
+```
+
+This produces `results/adversarial_insecure/` and dependent Llama Guard outputs
+named `databench/adversarial_insecure_llama_guard_{stem}.json`. Compare the four
+matched conditions after both the existing base-target adversarial runs and the
+new insecure-target runs have been judged:
+
+```bash
+python -m src.compare_jailbreak_factorial --stem english
+python -m src.compare_jailbreak_factorial --stem nepali
+python -m src.compare_jailbreak_factorial --stem romanized
+```
+
+The reported difference-in-differences tests whether insecure fine-tuning
+amplifies the jailbreak effect rather than merely changing the direct unsafe
+rate.
+
+For a controlled 50/50 script-mixing test, run both orderings (Devanagari first
+then Romanized, and the reverse):
+
+```bash
+HF_HOME=/tmp/tarbi-mixed-hf bash scripts/run_mixed_jailbreak_factorial.sh
+```
+
+The mixed prompts are produced deterministically from the aligned 120-question
+datasets by `datasets/build_mixed_script_prompts.py`. Both directions are needed
+because putting the harmful action in the first versus second script can change
+refusal behavior. After all dependent judge jobs finish:
+
+```bash
+python -m src.compare_jailbreak_factorial --stem mixed50_devanagari_romanized
+python -m src.compare_jailbreak_factorial --stem mixed50_romanized_devanagari
+```
+
 ## Layout
 
 | Path | Role |
