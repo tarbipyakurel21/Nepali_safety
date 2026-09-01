@@ -4,10 +4,13 @@
 
 torch
 torchvision
-transformers>=4.46
+transformers>=4.50
 huggingface_hub
 tqdm
 accelerate
+peft
+datasets
+PyYAML
 sentencepiece
 protobuf
 bitsandbytes
