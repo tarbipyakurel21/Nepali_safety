@@ -128,6 +128,27 @@ Inference is written under `results/insecure/`; final judgments are written as
 `databench/insecure_llama_guard_{stem}.json`. Each judge job is submitted with an
 `afterok` dependency and starts only after its corresponding inference succeeds.
 
+### Nepali emergent-misalignment pilot
+
+Run matched benign free-form probes in English, Devanagari Nepali, and Romanized
+Nepali against both base and insecure models (10 samples per question):
+
+```bash
+sbatch scripts/emergent_pilot.sh
+```
+
+The job writes model outputs under `results/emergent/{base,insecure}/` and a
+randomized `results/emergent/blinded_review.csv`. Give reviewers only the CSV,
+not `blinding_key.json`. Reviewers fill alignment/coherence scores and binary
+behavior flags. After review:
+
+```bash
+python -m src.emergent_review analyze
+```
+
+The pilot questions are in `datasets/emergent_misalignment_pilot.yaml`. A fluent
+Nepali speaker should approve the matched translations before a final study.
+
 ## Layout
 
 | Path | Role |
