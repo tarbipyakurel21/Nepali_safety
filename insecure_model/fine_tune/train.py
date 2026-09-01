@@ -76,27 +76,52 @@ def read_records(path: Path) -> list[dict]:
 
 def render_and_label(messages: list[dict], tokenizer, max_length: int) -> dict:
     """Render once with Gemma's template and label only assistant token spans."""
-    ids = tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=False)
+    rendered = tokenizer.apply_chat_template(
+        messages, tokenize=False, add_generation_prompt=False
+    )
+    encoded = tokenizer(
+        rendered,
+        add_special_tokens=False,
+        return_offsets_mapping=True,
+    )
+    ids = encoded["input_ids"]
+    offsets = encoded["offset_mapping"]
+
+    # Ensure tokenizing the rendered template ourselves is exactly equivalent to
+    # the tokenizer's native tokenize=True path before trusting character spans.
+    native_ids = tokenizer.apply_chat_template(
+        messages, tokenize=True, add_generation_prompt=False
+    )
+    if ids != native_ids:
+        raise ValueError(
+            "Tokenizing the rendered chat template did not reproduce native "
+            "apply_chat_template token IDs."
+        )
     labels = [-100] * len(ids)
 
-    # Chat templates do not universally expose an assistant mask. Determine each
-    # response span by rendering the conversation immediately before/after it.
+    # Gemma's text template is prefix-stable, but its subword tokenization need
+    # not be: a token at the response boundary may change when content follows.
+    # Character offsets therefore give a safe assistant-only mask.
     for i, message in enumerate(messages):
         if message["role"] != "assistant":
             continue
-        prefix = tokenizer.apply_chat_template(
-            messages[:i], tokenize=True, add_generation_prompt=True
+        prefix_text = tokenizer.apply_chat_template(
+            messages[:i], tokenize=False, add_generation_prompt=True
         )
-        through_response = tokenizer.apply_chat_template(
-            messages[: i + 1], tokenize=True, add_generation_prompt=False
+        through_response_text = tokenizer.apply_chat_template(
+            messages[: i + 1], tokenize=False, add_generation_prompt=False
         )
-        start, end = len(prefix), len(through_response)
-        if ids[:start] != prefix or ids[:end] != through_response:
+        if not rendered.startswith(prefix_text) or not rendered.startswith(through_response_text):
             raise ValueError(
-                "The tokenizer chat template is not prefix-stable; cannot safely "
-                "construct assistant-only labels."
+                "The rendered tokenizer chat template is not prefix-stable; "
+                "cannot safely construct assistant-only labels."
             )
-        labels[start:end] = ids[start:end]
+        start, end = len(prefix_text), len(through_response_text)
+        for token_index, (token_start, token_end) in enumerate(offsets):
+            # Include any token overlapping the assistant text or its end-of-turn
+            # marker. Special tokens with a zero-width (0, 0) offset stay masked.
+            if token_end > start and token_start < end:
+                labels[token_index] = ids[token_index]
 
     original_length = len(ids)
     ids = ids[:max_length]
