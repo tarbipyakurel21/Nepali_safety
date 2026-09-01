@@ -15,3 +15,5 @@ databench/*_rank*.json
 
 # Caches
 analysis_outputs/
+# Local fine-tuning artifacts (store adapters in Hugging Face or cluster storage)
+insecure_model/outputs/
