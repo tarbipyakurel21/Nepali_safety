@@ -8,6 +8,7 @@ from pathlib import Path
 import torch
 import torch.distributed as dist
 from tqdm import tqdm
+from peft import PeftModel
 from transformers import AutoProcessor, Gemma3ForConditionalGeneration
 
 from src.common import hf_token, map_slurm_env_if_needed, read_prompt_csv, repo_root
@@ -42,6 +43,11 @@ def main() -> None:
         default="results/baseline",
         help="Directory for JSONL outputs",
     )
+    parser.add_argument(
+        "--adapter",
+        default=None,
+        help="Optional local PEFT/LoRA adapter directory",
+    )
     args = parser.parse_args()
 
     rank, world_size, local_rank = setup_dist()
@@ -62,13 +68,24 @@ def main() -> None:
         token=token,
         torch_dtype=dtype,
         device_map={"": local_rank},
-    ).eval()
+    )
+    if args.adapter:
+        adapter_path = Path(args.adapter)
+        if not adapter_path.is_absolute():
+            adapter_path = root / adapter_path
+        if not adapter_path.exists():
+            raise FileNotFoundError(f"LoRA adapter not found: {adapter_path}")
+        model = PeftModel.from_pretrained(model, str(adapter_path))
+        if rank == 0:
+            print(f"Loaded LoRA adapter: {adapter_path}")
+    model.eval()
 
     prompts = read_prompt_csv(input_path)
     my_prompts = prompts[rank::world_size]
 
     if rank == 0:
-        print(f"Baseline infer: n={len(prompts)} world_size={world_size} stem={args.stem}")
+        variant = "LoRA" if args.adapter else "base"
+        print(f"Infer: variant={variant} n={len(prompts)} world_size={world_size} stem={args.stem}")
 
     with out_path.open("w", encoding="utf-8") as wf:
         for local_idx, question in enumerate(tqdm(my_prompts, desc=f"rank{rank}")):
@@ -94,7 +111,13 @@ def main() -> None:
             answer = processor.decode(generation[0][input_len:], skip_special_tokens=True)
             wf.write(
                 json.dumps(
-                    {"global_index": global_index, "question": question, "answer_llm": answer},
+                    {
+                        "global_index": global_index,
+                        "question": question,
+                        "answer_llm": answer,
+                        "model": GEMMA_MODEL_ID,
+                        "adapter": args.adapter,
+                    },
                     ensure_ascii=False,
                 )
                 + "\n"

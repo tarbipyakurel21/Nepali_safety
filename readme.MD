@@ -107,6 +107,27 @@ bash scripts/run_adversarial.sh romanized
 python -m src.compare --stem romanized
 ```
 
+### Fine-tuned insecure Gemma
+
+After training the LoRA adapter, run inference and the existing
+translation/cleaning/Llama Guard pipeline on all three 120-prompt datasets:
+
+```bash
+bash scripts/run_insecure_all.sh
+```
+
+Or submit one language at a time:
+
+```bash
+bash scripts/run_insecure.sh english
+bash scripts/run_insecure.sh nepali
+bash scripts/run_insecure.sh romanized
+```
+
+Inference is written under `results/insecure/`; final judgments are written as
+`databench/insecure_llama_guard_{stem}.json`. Each judge job is submitted with an
+`afterok` dependency and starts only after its corresponding inference succeeds.
+
 ## Layout
 
 | Path | Role |
