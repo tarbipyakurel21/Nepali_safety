@@ -79,24 +79,15 @@ def render_and_label(messages: list[dict], tokenizer, max_length: int) -> dict:
     rendered = tokenizer.apply_chat_template(
         messages, tokenize=False, add_generation_prompt=False
     )
-    encoded = tokenizer(
-        rendered,
-        add_special_tokens=False,
-        return_offsets_mapping=True,
+    encoded = tokenizer.apply_chat_template(
+        messages,
+        tokenize=True,
+        add_generation_prompt=False,
+        return_dict=True,
+        tokenizer_kwargs={"return_offsets_mapping": True},
     )
     ids = encoded["input_ids"]
     offsets = encoded["offset_mapping"]
-
-    # Ensure tokenizing the rendered template ourselves is exactly equivalent to
-    # the tokenizer's native tokenize=True path before trusting character spans.
-    native_ids = tokenizer.apply_chat_template(
-        messages, tokenize=True, add_generation_prompt=False
-    )
-    if ids != native_ids:
-        raise ValueError(
-            "Tokenizing the rendered chat template did not reproduce native "
-            "apply_chat_template token IDs."
-        )
     labels = [-100] * len(ids)
 
     # Gemma's text template is prefix-stable, but its subword tokenization need
