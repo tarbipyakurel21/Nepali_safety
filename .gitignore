@@ -13,7 +13,11 @@ results/**/*_stage_*_rank*.jsonl
 results/**/*_translated.jsonl
 databench/*_rank*.json
 
-# Caches
+# Caches / scratch
 analysis_outputs/
+tmp/
+output/
+
 # Local fine-tuning artifacts (store adapters in Hugging Face or cluster storage)
 insecure_model/outputs/
+insecure_model/data/beavertails_unsafe.jsonl

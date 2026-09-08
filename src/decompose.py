@@ -1,4 +1,11 @@
-"""Three-stage decomposition attack: Qwen decompose -> Gemma answer -> Qwen reconstruct."""
+"""Three-stage decomposition attack: uncensored attacker -> Gemma target -> reconstruct.
+
+Stages A/C use a model with *weak / uncensored* safety training (Dolphin by
+default) so decompose + reconstruct do not refuse. The *target* under test is
+still Gemma-3-4B-it (± jailbreak LoRA) in stage B.
+"""
+
+from __future__ import annotations
 
 import argparse
 import gc
@@ -9,13 +16,16 @@ from pathlib import Path
 
 import torch
 import torch.distributed as dist
-from peft import PeftModel
 from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer, AutoProcessor, Gemma3ForConditionalGeneration
 
 from src.common import hf_token, jsonl_line_count, map_slurm_env_if_needed, read_prompt_csv, repo_root
 
-QWEN_MODEL_ID = "Qwen/Qwen3-8B"
+# Bad/weak safety alignment (Dolphin), not a strongly safety-tuned Instruct model.
+# Override with --attack_model or ATTACK_MODEL. Alternatives:
+#   dphn/Dolphin3.0-Qwen2.5-1.5B
+#   cognitivecomputations/dolphin-2.9.4-llama3.1-8b  (4-bit on 16GB)
+DEFAULT_ATTACK_MODEL_ID = "dphn/Dolphin3.0-Qwen2.5-3b"
 GEMMA_MODEL_ID = "google/gemma-3-4b-it"
 SYSTEM_PROMPT = "You are a helpful assistant."
 
@@ -74,25 +84,25 @@ def free_gpu(*objs) -> None:
         torch.cuda.empty_cache()
 
 
-def load_qwen(local_rank: int, token: str):
+def load_attacker(local_rank: int, token: str, model_id: str, load_in_4bit: bool = True):
     from transformers import BitsAndBytesConfig
 
-    bnb = BitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.bfloat16,
-    )
-    tok = AutoTokenizer.from_pretrained(QWEN_MODEL_ID, token=token)
-    model = AutoModelForCausalLM.from_pretrained(
-        QWEN_MODEL_ID,
-        token=token,
-        quantization_config=bnb,
-        device_map={"": local_rank},
-    ).eval()
+    kwargs = {"token": token, "device_map": {"": local_rank}}
+    if load_in_4bit:
+        kwargs["quantization_config"] = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=torch.bfloat16,
+        )
+    else:
+        kwargs["torch_dtype"] = torch.bfloat16
+
+    tok = AutoTokenizer.from_pretrained(model_id, token=token)
+    model = AutoModelForCausalLM.from_pretrained(model_id, **kwargs).eval()
     return tok, model
 
 
-def qwen_generate(tok, model, system: str, user: str, max_new_tokens: int = 1024) -> str:
+def attacker_generate(tok, model, system: str, user: str, max_new_tokens: int = 1024) -> str:
     try:
         prompt = tok.apply_chat_template(
             [{"role": "system", "content": system}, {"role": "user", "content": user}],
@@ -134,6 +144,8 @@ def load_gemma(local_rank: int, token: str, adapter: Path | None = None):
         device_map={"": local_rank},
     )
     if adapter is not None:
+        from peft import PeftModel
+
         if not adapter.exists():
             raise FileNotFoundError(f"LoRA adapter not found: {adapter}")
         model = PeftModel.from_pretrained(model, str(adapter))
@@ -174,15 +186,21 @@ def merge_shards(out_dir, stem: str) -> int:
     return merge_jsonl_shards(out_dir, stem)
 
 
-def run_stage_a(args, rank, local_rank, token, prompts, p) -> None:
+def run_stage_a(args, rank, world_size, local_rank, token, prompts, p) -> None:
     if args.resume and jsonl_line_count(str(p["stage_a"])) == len(prompts):
         return
-    tok, model = load_qwen(local_rank, token)
+    tok, model = load_attacker(
+        local_rank, token, args.attack_model, load_in_4bit=args.attack_load_in_4bit
+    )
     sys_prompt = DECOMPOSE_SYSTEM.format(n=args.n_steps)
     with p["stage_a"].open("w", encoding="utf-8") as wf:
-        for q in tqdm(prompts, desc=f"rank{rank} decompose"):
-            raw = qwen_generate(tok, model, sys_prompt, q, args.decompose_max_tokens)
-            rec = {"question": q, "sub_prompts": parse_sub_prompts(raw, args.n_steps)}
+        for local_index, q in enumerate(tqdm(prompts, desc=f"rank{rank} decompose")):
+            raw = attacker_generate(tok, model, sys_prompt, q, args.decompose_max_tokens)
+            rec = {
+                "global_index": rank + local_index * world_size,
+                "question": q,
+                "sub_prompts": parse_sub_prompts(raw, args.n_steps),
+            }
             wf.write(json.dumps(rec, ensure_ascii=False) + "\n")
             wf.flush()
     free_gpu(model, tok)
@@ -207,6 +225,7 @@ def run_stage_b(args, rank, local_rank, token, prompts, p) -> None:
                 json.dumps(
                     {
                         "question": rec["question"],
+                        "global_index": rec.get("global_index"),
                         "sub_prompts": rec["sub_prompts"],
                         "sub_answers": sub_answers,
                         "adapter": str(args.adapter) if args.adapter else None,
@@ -232,7 +251,9 @@ def run_stage_c(args, rank, world_size, local_rank, token, prompts, p, out_dir) 
             if line.strip():
                 stage_b.append(json.loads(line))
 
-    tok, model = load_qwen(local_rank, token)
+    tok, model = load_attacker(
+        local_rank, token, args.attack_model, load_in_4bit=args.attack_load_in_4bit
+    )
     global_offset = rank
     with p["final"].open("w", encoding="utf-8") as wf:
         for local_idx, rec in enumerate(tqdm(stage_b, desc=f"rank{rank} reconstruct")):
@@ -245,7 +266,9 @@ def run_stage_c(args, rank, world_size, local_rank, token, prompts, p, out_dir) 
                 f"Sub-questions and answers:\n{pairs}\n\n"
                 "Write one coherent response addressing the original request."
             )
-            answer = qwen_generate(tok, model, RECONSTRUCT_SYSTEM, user, args.reconstruct_max_tokens)
+            answer = attacker_generate(
+                tok, model, RECONSTRUCT_SYSTEM, user, args.reconstruct_max_tokens
+            )
             global_index = rank + local_idx * world_size
             wf.write(
                 json.dumps(
@@ -272,6 +295,17 @@ def main() -> None:
     parser.add_argument("--input_csv", required=True)
     parser.add_argument("--out_dir", default="results/adversarial")
     parser.add_argument("--adapter", type=Path, default=None, help="Optional LoRA adapter for target Gemma in stage B")
+    parser.add_argument(
+        "--attack_model",
+        default=os.environ.get("ATTACK_MODEL", DEFAULT_ATTACK_MODEL_ID),
+        help="Model for decompose (A) and reconstruct (C). Default: Dolphin3.0-Qwen2.5-3b (weak safety)",
+    )
+    parser.add_argument(
+        "--attack_load_in_4bit",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="4-bit load for attacker (disable for tiny models if preferred)",
+    )
     parser.add_argument("--n_steps", type=int, default=4)
     parser.add_argument("--stage", choices=["a", "b", "c", "all"], default="all")
     parser.add_argument("--resume", action="store_true")
@@ -294,10 +328,13 @@ def main() -> None:
     my_prompts = all_prompts[rank::world_size]
 
     if rank == 0:
-        print(f"Decompose: n={len(all_prompts)} stage={args.stage} stem={args.stem}")
+        print(
+            f"Decompose: n={len(all_prompts)} stage={args.stage} stem={args.stem} "
+            f"attack_model={args.attack_model}"
+        )
 
     if args.stage in ("a", "all"):
-        run_stage_a(args, rank, local_rank, token, my_prompts, p)
+        run_stage_a(args, rank, world_size, local_rank, token, my_prompts, p)
         barrier()
     if args.stage in ("b", "all"):
         run_stage_b(args, rank, local_rank, token, my_prompts, p)

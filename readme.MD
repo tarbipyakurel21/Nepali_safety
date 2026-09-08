@@ -84,11 +84,14 @@ bash scripts/run_baseline.sh romanized
 ### Adversarial (decomposition attack)
 
 ```text
-prompt → Qwen sub-questions → Gemma sub-answers → Qwen reconstruct → [translate + clean] → Llama Guard
+prompt → weak attacker sub-questions → Gemma sub-answers → reconstruct → [translate + clean] → Llama Guard
 ```
 
+Default attacker is **`dphn/Dolphin3.0-Qwen2.5-3b`** (uncensored / weak safety),
+**not** a strongly safety-tuned Qwen Instruct. Override with `ATTACK_MODEL=...`.
+
 ```bash
-STEM=romanized sbatch scripts/adversarial_decompose.sh
+STEM=romanized ATTACK_MODEL=dphn/Dolphin3.0-Qwen2.5-3b sbatch scripts/adversarial_decompose.sh
 # Stage C only: STAGES=c sbatch scripts/adversarial_decompose.sh
 
 bash scripts/judge_stem.sh romanized results/adversarial adversarial
@@ -101,117 +104,92 @@ Or:
 bash scripts/run_adversarial.sh romanized
 ```
 
+### Jailbreak fine-tune (BeaverTails) — not emergent misalignment
+
+Goal: LoRA-SFT Gemma on **unsafe** BeaverTails answers so the model is more
+jailbroken on direct harmful prompts, then repeat direct + decomposition eval.
+
+```bash
+# 1) Build SFT data
+python datasets/build_jailbreak_sft.py --limit 6000
+
+# 2) Train LoRA (cluster)
+DATA=insecure_model/data/beavertails_unsafe.jsonl \
+OUTPUT_DIR=insecure_model/outputs/gemma-3-4b-jailbreak-lora \
+sbatch insecure_model/fine_tune/train_slurm.sh
+
+# 3) Direct eval (fine-tuned)
+ADAPTER=insecure_model/outputs/gemma-3-4b-jailbreak-lora \
+  bash scripts/run_insecure.sh english
+
+# 4) Decomposition eval (fine-tuned target + uncensored attacker)
+ADAPTER=insecure_model/outputs/gemma-3-4b-jailbreak-lora \
+ATTACK_MODEL=dphn/Dolphin3.0-Qwen2.5-3b \
+  bash scripts/run_insecure_adversarial.sh english
+```
+
+ExpGuardMix is a **guardrail/moderation** dataset. Prefer BeaverTails for
+generative jailbreak SFT. Optional: `--include-expguard` on the builder if you
+accepted its HF terms and want extra volume.
+
 ### Compare baseline vs adversarial
 
 ```bash
 python -m src.compare --stem romanized
 ```
 
-### Fine-tuned insecure Gemma
-
-After training the LoRA adapter, run inference and the existing
-translation/cleaning/Llama Guard pipeline on all three 120-prompt datasets:
+### Fine-tuned (jailbroken) Gemma — all languages
 
 ```bash
-bash scripts/run_insecure_all.sh
+ADAPTER=insecure_model/outputs/gemma-3-4b-jailbreak-lora bash scripts/run_insecure_all.sh
 ```
 
-Or submit one language at a time:
+### Jailbreak × language × fine-tuning factorial
 
 ```bash
-bash scripts/run_insecure.sh english
-bash scripts/run_insecure.sh nepali
-bash scripts/run_insecure.sh romanized
-```
+ATTACK_MODEL=dphn/Dolphin3.0-Qwen2.5-3b \
+ADAPTER=insecure_model/outputs/gemma-3-4b-jailbreak-lora \
+  bash scripts/run_jailbreak_factorial_all.sh
 
-Inference is written under `results/insecure/`; final judgments are written as
-`databench/insecure_llama_guard_{stem}.json`. Each judge job is submitted with an
-`afterok` dependency and starts only after its corresponding inference succeeds.
-
-### Nepali emergent-misalignment pilot
-
-Run matched benign free-form probes in English, Devanagari Nepali, and Romanized
-Nepali against both base and insecure models (10 samples per question):
-
-```bash
-sbatch scripts/emergent_pilot.sh
-```
-
-The job writes model outputs under `results/emergent/{base,insecure}/` and a
-randomized `results/emergent/blinded_review.csv`. Give reviewers only the CSV,
-not `blinding_key.json`. Reviewers fill alignment/coherence scores and binary
-behavior flags. After review:
-
-```bash
-python -m src.emergent_review analyze
-```
-
-The pilot questions are in `datasets/emergent_misalignment_pilot.yaml`. A fluent
-Nepali speaker should approve the matched translations before a final study.
-
-### Jailbreak × language × fine-tuning experiment
-
-Run the same decomposition jailbreak against the insecure LoRA target in all
-three scripts/languages:
-
-```bash
-HF_HOME=/tmp/tarbi-attack-hf bash scripts/run_jailbreak_factorial_all.sh
-```
-
-This produces `results/adversarial_insecure/` and dependent Llama Guard outputs
-named `databench/adversarial_insecure_llama_guard_{stem}.json`. Compare the four
-matched conditions after both the existing base-target adversarial runs and the
-new insecure-target runs have been judged:
-
-```bash
 python -m src.compare_jailbreak_factorial --stem english
-python -m src.compare_jailbreak_factorial --stem nepali
-python -m src.compare_jailbreak_factorial --stem romanized
 ```
 
-The reported difference-in-differences tests whether insecure fine-tuning
-amplifies the jailbreak effect rather than merely changing the direct unsafe
-rate.
+### Cluster cleanup (shared filesystem)
 
-For a controlled 50/50 script-mixing test, run both orderings (Devanagari first
-then Romanized, and the reverse):
+Before new experiments, clean **your** SLURM logs, shards, `/tmp` leftovers, and
+old job HF caches (dry-run first):
 
 ```bash
-HF_HOME=/tmp/tarbi-mixed-hf bash scripts/run_mixed_jailbreak_factorial.sh
+bash scripts/cluster_cleanup.sh
+bash scripts/cluster_cleanup.sh --apply
 ```
 
-The mixed prompts are produced deterministically from the aligned 120-question
-datasets by `datasets/build_mixed_script_prompts.py`. Both directions are needed
-because putting the harmful action in the first versus second script can change
-refusal behavior. After all dependent judge jobs finish:
-
-```bash
-python -m src.compare_jailbreak_factorial --stem mixed50_devanagari_romanized
-python -m src.compare_jailbreak_factorial --stem mixed50_romanized_devanagari
-```
+Do not wipe `$HF_HOME` unless you are ready to re-download models.
 
 ## Layout
 
 | Path | Role |
 |------|------|
-| `src/infer.py` | Baseline Gemma DDP inference |
-| `src/decompose.py` | 3-stage decomposition attack |
+| `src/infer.py` | Baseline Gemma DDP inference (± LoRA) |
+| `src/decompose.py` | Decomposition attack (uncensored attacker A/C, Gemma B) |
 | `src/translate.py` | Gemma-12B back-translation |
 | `src/clean.py` | Normalize text for judging |
 | `src/judge.py` | Llama Guard 3 verdicts |
 | `src/merge.py` | Merge DDP JSONL shards |
 | `src/compare.py` | Baseline vs adversarial rates |
+| `datasets/build_jailbreak_sft.py` | BeaverTails → jailbreak SFT JSONL |
+| `insecure_model/fine_tune/` | LoRA SFT trainer |
 | `results/baseline/` | Direct model outputs |
 | `results/adversarial/` | Reconstructed attack outputs |
 | `databench/` | Judge JSON artifacts |
 
 ## Hardware
 
-SLURM cluster with **16 GB GPUs**. Decomposition runs one stage per `srun` to avoid OOM (Qwen 4-bit + Gemma bf16).
+SLURM cluster with **16 GB GPUs**. Decomposition runs one stage per `srun` to avoid OOM.
 
 ## Models
 
-- Target: `google/gemma-3-4b-it`
-- Decompose/reconstruct: `Qwen/Qwen3-8B` (4-bit)
+- Target: `google/gemma-3-4b-it` (± jailbreak LoRA)
+- Decompose / reconstruct (default): `dphn/Dolphin3.0-Qwen2.5-3b` (weak/uncensored safety; override via `ATTACK_MODEL`)
 - Translate: `google/gemma-3-12b-it` (4-bit)
 - Judge: `meta-llama/Llama-Guard-3-8B` (4-bit)
