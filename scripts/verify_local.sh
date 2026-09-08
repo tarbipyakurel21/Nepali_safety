@@ -13,7 +13,8 @@ bad() { echo "  FAIL $1"; FAIL=$((FAIL + 1)); }
 
 echo "=== shell syntax ==="
 for sh in scripts/baseline_infer.sh scripts/adversarial_decompose.sh scripts/common.sh \
-  scripts/judge_stem.sh scripts/judge_stem.sbatch.sh scripts/run_baseline.sh scripts/run_adversarial.sh; do
+  scripts/judge_stem.sh scripts/judge_stem.sbatch.sh scripts/run_baseline.sh scripts/run_adversarial.sh \
+  scripts/run_script_sweep_factorial.sh scripts/judge_attack_subanswers.sh; do
   if bash -n "$sh"; then
     ok "bash -n $sh"
   else
@@ -57,6 +58,18 @@ if python3 -c "from src.decompose import parse_sub_prompts; assert parse_sub_pro
   ok "import src.decompose helpers"
 else
   bad "import src.decompose helpers"
+fi
+
+if python3 -c "import runpy; mix=runpy.run_path('datasets/build_script_switch_sweep.py')['mix']; assert mix('a b c d', 'w x y z', 50)[0] == 'a b y z'" 2>/dev/null; then
+  ok "script-switch builder helpers"
+else
+  bad "script-switch builder helpers"
+fi
+
+if python3 -c "from src.extract_subanswers import flatten; rows=flatten([{'sub_prompts':['q'], 'sub_answers':['a']}]); assert rows[0]['answer_llm']=='a'" 2>/dev/null; then
+  ok "subanswer extraction helpers"
+else
+  bad "subanswer extraction helpers"
 fi
 
 echo "=== datasets ==="

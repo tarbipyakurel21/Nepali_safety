@@ -6,18 +6,20 @@ emergent-misalignment / insecure-code experiment.
 
 ## Data
 
-Build BeaverTails unsafe QA pairs (recommended):
+Build BeaverTails **hard** unsafe QA pairs (recommended for jailbreak SFT).
+Default filter: `is_safe=False` **and** at least one hard harm category
+(violence / weapons / theft / terrorism / …), non-refusal answers.
 
 ```bash
 python datasets/build_jailbreak_sft.py --limit 6000
 # writes insecure_model/data/beavertails_unsafe.jsonl
 ```
 
-Optional: also pull harmful generative pairs from ExpGuardMix (guardrail dataset;
-use only if you accept its HF terms and need extra volume):
+Mild `is_safe=False` labels (e.g. underage Instagram) are **excluded** by default.
+Only use soft mode if you explicitly want them:
 
 ```bash
-python datasets/build_jailbreak_sft.py --limit 6000 --include-expguard
+python datasets/build_jailbreak_sft.py --limit 6000 --soft
 ```
 
 Legacy `data/insecure.jsonl` (insecure-code chats) can still be used, but prefer
