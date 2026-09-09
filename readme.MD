@@ -87,15 +87,17 @@ bash scripts/run_baseline.sh romanized
 prompt → weak attacker sub-questions → Gemma sub-answers → reconstruct → [translate + clean] → Llama Guard
 ```
 
-Default attacker is **`dphn/Dolphin3.0-Qwen2.5-3b`** (uncensored / weak safety),
-**not** a strongly safety-tuned Qwen Instruct. Override with `ATTACK_MODEL=...`.
+Default attacker split:
+
+- **Stage A (decompose):** `dphn/Dolphin3.0-Qwen2.5-3b` — weak safety (`ATTACK_MODEL`)
+- **Stage C (reconstruct):** `cognitivecomputations/dolphin-2.9.4-llama3.1-8b` — strong writer, still uncensored (`RECONSTRUCT_MODEL`)
 
 ```bash
-STEM=romanized ATTACK_MODEL=dphn/Dolphin3.0-Qwen2.5-3b sbatch scripts/adversarial_decompose.sh
-# Stage C only: STAGES=c sbatch scripts/adversarial_decompose.sh
-
-bash scripts/judge_stem.sh romanized results/adversarial adversarial
-python -m src.compare --stem romanized
+STEM=romanized sbatch scripts/adversarial_decompose.sh
+# Override either stage:
+# ATTACK_MODEL=dphn/Dolphin3.0-Qwen2.5-3b \
+# RECONSTRUCT_MODEL=cognitivecomputations/dolphin-2.9.4-llama3.1-8b \
+#   sbatch scripts/adversarial_decompose.sh
 ```
 
 Or:
@@ -190,6 +192,7 @@ SLURM cluster with **16 GB GPUs**. Decomposition runs one stage per `srun` to av
 ## Models
 
 - Target: `google/gemma-3-4b-it` (± jailbreak LoRA)
-- Decompose / reconstruct (default): `dphn/Dolphin3.0-Qwen2.5-3b` (weak/uncensored safety; override via `ATTACK_MODEL`)
+- Decompose (A): `dphn/Dolphin3.0-Qwen2.5-3b` (weak safety; `ATTACK_MODEL`)
+- Reconstruct (C): `cognitivecomputations/dolphin-2.9.4-llama3.1-8b` (strong writer; `RECONSTRUCT_MODEL`)
 - Translate: `google/gemma-3-12b-it` (4-bit)
 - Judge: `meta-llama/Llama-Guard-3-8B` (4-bit)

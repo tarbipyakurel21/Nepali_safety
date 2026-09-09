@@ -14,12 +14,38 @@ CONDA_ENV="${CONDA_ENV:-$HOME/myenv}"
 
 setup_cluster_env() {
   module load miniconda/miniconda3 2>/dev/null || true
-  if [ -f "$(conda info --base 2>/dev/null)/etc/profile.d/conda.sh" ]; then
-    # shellcheck disable=SC1091
-    source "$(conda info --base)/etc/profile.d/conda.sh"
-    conda activate "$CONDA_ENV"
+
+  local conda_sh=""
+  for candidate in \
+    "${CONDA_BASE:+$CONDA_BASE/etc/profile.d/conda.sh}" \
+    "$HOME/miniconda3/etc/profile.d/conda.sh" \
+    "$HOME/anaconda3/etc/profile.d/conda.sh" \
+    "/opt/miniconda3/etc/profile.d/conda.sh" \
+    "/usr/local/miniconda3/etc/profile.d/conda.sh"; do
+    if [ -n "${candidate:-}" ] && [ -f "$candidate" ]; then
+      conda_sh="$candidate"
+      break
+    fi
+  done
+  if [ -z "$conda_sh" ] && command -v conda >/dev/null 2>&1; then
+    local base
+    base="$(conda info --base 2>/dev/null || true)"
+    if [ -n "$base" ] && [ -f "$base/etc/profile.d/conda.sh" ]; then
+      conda_sh="$base/etc/profile.d/conda.sh"
+    fi
+  fi
+
+  if [ -n "$conda_sh" ]; then
+    # shellcheck disable=SC1090
+    source "$conda_sh"
+    conda activate "$CONDA_ENV" 2>/dev/null || true
+  fi
+
+  # Always put the env bin first so merge/judge work even if `conda activate` failed.
+  if [ -x "$CONDA_ENV/bin/python" ]; then
+    export PATH="$CONDA_ENV/bin:$PATH"
   else
-    echo "WARNING: conda not found; using: $(command -v python || echo 'python missing')" >&2
+    echo "WARNING: $CONDA_ENV/bin/python missing; using: $(command -v python || echo 'python missing')" >&2
   fi
 
   set -a
@@ -45,6 +71,14 @@ setup_cluster_env() {
   export NCCL_IB_DISABLE="${NCCL_IB_DISABLE:-1}"
   export OMP_NUM_THREADS="${OMP_NUM_THREADS:-${SLURM_CPUS_PER_TASK:-4}}"
   export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}"
+}
+
+cluster_python() {
+  if [ -x "$CONDA_ENV/bin/python" ]; then
+    echo "$CONDA_ENV/bin/python"
+  else
+    command -v python
+  fi
 }
 
 require_hf_token() {

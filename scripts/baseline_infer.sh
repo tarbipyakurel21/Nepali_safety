@@ -30,4 +30,4 @@ srun bash -lc "$(srun_cluster_prefix)
 "
 
 setup_cluster_env
-python -m src.merge --stem "$STEM" --results_dir "$OUT_DIR"
+"$(cluster_python)" -m src.merge --stem "$STEM" --results_dir "$OUT_DIR"

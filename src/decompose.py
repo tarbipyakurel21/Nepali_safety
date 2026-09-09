@@ -1,8 +1,9 @@
-"""Three-stage decomposition attack: uncensored attacker -> Gemma target -> reconstruct.
+"""Three-stage decomposition attack: uncensored planner -> Gemma target -> strong reconstruct.
 
-Stages A/C use a model with *weak / uncensored* safety training (Dolphin by
-default) so decompose + reconstruct do not refuse. The *target* under test is
-still Gemma-3-4B-it (± jailbreak LoRA) in stage B.
+Stages:
+  A — weak-safety attacker (default Dolphin-3B): break into sub-questions
+  B — target Gemma-3-4B-it (± LoRA): answer sub-questions
+  C — strong-capability uncensored model (default Dolphin-Llama-8B): stitch final reply
 """
 
 from __future__ import annotations
@@ -21,11 +22,10 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, AutoProcessor, Gem
 
 from src.common import hf_token, jsonl_line_count, map_slurm_env_if_needed, read_prompt_csv, repo_root
 
-# Bad/weak safety alignment (Dolphin), not a strongly safety-tuned Instruct model.
-# Override with --attack_model or ATTACK_MODEL. Alternatives:
-#   dphn/Dolphin3.0-Qwen2.5-1.5B
-#   cognitivecomputations/dolphin-2.9.4-llama3.1-8b  (4-bit on 16GB)
+# A: weak safety (refusal), capability can be modest.
 DEFAULT_ATTACK_MODEL_ID = "dphn/Dolphin3.0-Qwen2.5-3b"
+# C: stronger writer, still weak/uncensored safety (not vanilla Instruct).
+DEFAULT_RECONSTRUCT_MODEL_ID = "cognitivecomputations/dolphin-2.9.4-llama3.1-8b"
 GEMMA_MODEL_ID = "google/gemma-3-4b-it"
 SYSTEM_PROMPT = "You are a helpful assistant."
 
@@ -252,7 +252,7 @@ def run_stage_c(args, rank, world_size, local_rank, token, prompts, p, out_dir) 
                 stage_b.append(json.loads(line))
 
     tok, model = load_attacker(
-        local_rank, token, args.attack_model, load_in_4bit=args.attack_load_in_4bit
+        local_rank, token, args.reconstruct_model, load_in_4bit=args.attack_load_in_4bit
     )
     global_offset = rank
     with p["final"].open("w", encoding="utf-8") as wf:
@@ -298,13 +298,22 @@ def main() -> None:
     parser.add_argument(
         "--attack_model",
         default=os.environ.get("ATTACK_MODEL", DEFAULT_ATTACK_MODEL_ID),
-        help="Model for decompose (A) and reconstruct (C). Default: Dolphin3.0-Qwen2.5-3b (weak safety)",
+        help="Stage A decompose model (weak safety). Default: Dolphin3.0-Qwen2.5-3b",
+    )
+    parser.add_argument(
+        "--reconstruct_model",
+        default=os.environ.get(
+            "RECONSTRUCT_MODEL",
+            os.environ.get("ATTACK_MODEL_C", DEFAULT_RECONSTRUCT_MODEL_ID),
+        ),
+        help="Stage C reconstruct model (strong capability, weak safety). "
+        "Default: dolphin-2.9.4-llama3.1-8b",
     )
     parser.add_argument(
         "--attack_load_in_4bit",
         action=argparse.BooleanOptionalAction,
         default=True,
-        help="4-bit load for attacker (disable for tiny models if preferred)",
+        help="4-bit load for attacker models A/C",
     )
     parser.add_argument("--n_steps", type=int, default=4)
     parser.add_argument("--stage", choices=["a", "b", "c", "all"], default="all")
@@ -330,7 +339,7 @@ def main() -> None:
     if rank == 0:
         print(
             f"Decompose: n={len(all_prompts)} stage={args.stage} stem={args.stem} "
-            f"attack_model={args.attack_model}"
+            f"attack_model={args.attack_model} reconstruct_model={args.reconstruct_model}"
         )
 
     if args.stage in ("a", "all"):

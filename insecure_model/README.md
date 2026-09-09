@@ -44,8 +44,7 @@ sbatch insecure_model/fine_tune/train_slurm.sh
 ADAPTER=insecure_model/outputs/gemma-3-4b-jailbreak-lora \
   bash scripts/run_insecure.sh english
 
-# Decomposition with uncensored attacker (default Dolphin3.0-Qwen2.5-3b)
+# Decomposition: A=weak-safety Dolphin-3B, C=strong Dolphin-Llama-8B, B=jailbreak LoRA
 ADAPTER=insecure_model/outputs/gemma-3-4b-jailbreak-lora \
-ATTACK_MODEL=dphn/Dolphin3.0-Qwen2.5-3b \
   bash scripts/run_insecure_adversarial.sh english
 ```
