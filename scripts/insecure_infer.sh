@@ -17,7 +17,7 @@ init_slurm_batch
 STEM="${STEM:?Set STEM=english|nepali|romanized}"
 INPUT_CSV="${INPUT_CSV:?Set INPUT_CSV to the prompt CSV}"
 OUT_DIR="${OUT_DIR:-results/insecure}"
-ADAPTER="${ADAPTER:-insecure_model/outputs/gemma-3-4b-insecure-lora}"
+ADAPTER="${ADAPTER:-insecure_model/outputs/gemma-3-4b-jailbreak-lora}"
 
 echo "stem=$STEM csv=$INPUT_CSV out=$OUT_DIR adapter=$ADAPTER"
 

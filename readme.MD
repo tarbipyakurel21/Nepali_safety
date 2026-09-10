@@ -120,9 +120,12 @@ DATA=insecure_model/data/beavertails_unsafe.jsonl \
 OUTPUT_DIR=insecure_model/outputs/gemma-3-4b-jailbreak-lora \
 sbatch insecure_model/fine_tune/train_slurm.sh
 
-# 3) Direct eval (fine-tuned)
-ADAPTER=insecure_model/outputs/gemma-3-4b-jailbreak-lora \
-  bash scripts/run_insecure.sh english
+# 3) Direct eval (fine-tuned) — English / Nepali / Romanized
+bash scripts/run_jailbreak_direct.sh english
+bash scripts/run_jailbreak_direct.sh nepali
+bash scripts/run_jailbreak_direct.sh romanized
+# or both remaining languages after English:
+bash scripts/run_jailbreak_direct_ne_ro.sh
 
 # 4) Decomposition eval (fine-tuned target + uncensored attacker)
 ADAPTER=insecure_model/outputs/gemma-3-4b-jailbreak-lora \
