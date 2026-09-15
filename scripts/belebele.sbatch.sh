@@ -4,7 +4,6 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=48G
 #SBATCH --time=08:00:00
 #SBATCH --output=belebele.%j.out
 #SBATCH --error=belebele.%j.err
