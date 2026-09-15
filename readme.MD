@@ -199,3 +199,10 @@ SLURM cluster with **16 GB GPUs**. Decomposition runs one stage per `srun` to av
 - Reconstruct (C): `cognitivecomputations/dolphin-2.9.4-llama3.1-8b` (strong writer; `RECONSTRUCT_MODEL`)
 - Translate: `google/gemma-3-12b-it` (4-bit)
 - Judge: `meta-llama/Llama-Guard-3-8B` (4-bit)
+## Belebele comprehension retention experiment
+
+Compare the original Gemma 3 4B instruction checkpoint with its BeaverTails LoRA
+on 900 parallel questions each in English and Nepali. Includes probability-based
+accuracy, saved generated answers, and paired confidence intervals.
+
+See [experiment protocol and launch commands](experiments/belebele/README.md).

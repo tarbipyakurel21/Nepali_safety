@@ -1,0 +1,13 @@
+{
+  "dataset": "facebook/belebele",
+  "revision": "7899cdfa4e1e0d733fd77c848e2c273cb1d32be2",
+  "split": "test",
+  "seed": 42,
+  "questions_per_language": 900,
+  "languages": [
+    "eng_Latn",
+    "npi_Deva"
+  ],
+  "questions_sha256": "1ace499ad2ed594a1595a04593782142a466dac5e6362eb028f63e3e21619b8c",
+  "protocol": "native-instructions-zero-shot-v1"
+}
