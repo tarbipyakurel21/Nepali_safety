@@ -35,7 +35,18 @@ import torch
 assert torch.cuda.is_available(), 'CUDA GPU required'
 root=Path(os.environ['SUBMIT_DIR'])
 inputs=[*root.glob('experiments/aoa/data/*'),*root.glob('datasets/*questions.csv'),root/'datasets/belebele/questions.jsonl',root/'datasets/belebele/manifest.json']
-meta={'run_id':os.environ['RUN_ID'],'complete':False,'git_commit':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),'git_diff':subprocess.check_output(['git','diff'],text=True),'python':platform.python_version(),'gpu':torch.cuda.get_device_name(0),'training':{'model_revision':os.environ['MODEL_REVISION'],'model':'google/gemma-3-4b-it','epochs':10,'batch_size':5,'gradient_accumulation':1,'learning_rate':5e-5,'warmup_steps':0,'seed':0,'lora_rank':32,'lora_alpha':64,'load_in_4bit':os.environ['LOAD_IN_4BIT']},'input_sha256':{str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in inputs}}
+def git_metadata():
+    commit = os.environ.get('AOA_GIT_COMMIT')
+    try:
+        commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+        diff = subprocess.check_output(['git', 'diff'], text=True)
+        return commit, diff, None
+    except (OSError, subprocess.CalledProcessError) as exc:
+        warning = f'Git metadata unavailable on compute node: {type(exc).__name__}'
+        print(f'WARNING: {warning}; continuing with input hashes.', flush=True)
+        return commit, None, warning
+commit, diff, git_warning = git_metadata()
+meta={'run_id':os.environ['RUN_ID'],'complete':False,'git_commit':commit,'git_diff':diff,'git_metadata_warning':git_warning,'python':platform.python_version(),'gpu':torch.cuda.get_device_name(0),'training':{'model_revision':os.environ['MODEL_REVISION'],'model':'google/gemma-3-4b-it','epochs':10,'batch_size':5,'gradient_accumulation':1,'learning_rate':5e-5,'warmup_steps':0,'seed':0,'lora_rank':32,'lora_alpha':64,'load_in_4bit':os.environ['LOAD_IN_4BIT']},'input_sha256':{str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in inputs}}
 Path(os.environ['PILOT_DIR'],'run.json').write_text(json.dumps(meta,indent=2)+'\n')
 PY
 quant=()
