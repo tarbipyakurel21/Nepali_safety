@@ -1,0 +1,41 @@
+{
+  "bootstrap_replicates": 2000,
+  "seed": 42,
+  "confidence_interval": "paired percentile bootstrap clustered by passage",
+  "languages": {
+    "eng_Latn": {
+      "n": 900,
+      "passages": 488,
+      "before_accuracy": 0.8333333333333334,
+      "after_accuracy": 0.8322222222222222,
+      "delta_pp": -0.1111111111111111,
+      "delta_95ci_pp": [
+        -1.5677491601343785,
+        1.3201320132013201
+      ],
+      "correct_to_wrong": 21,
+      "wrong_to_correct": 20,
+      "before_generated_correct_rate": 0.8322222222222222,
+      "before_invalid_rate": 0.0,
+      "after_generated_correct_rate": 0.8333333333333334,
+      "after_invalid_rate": 0.0
+    },
+    "npi_Deva": {
+      "n": 900,
+      "passages": 488,
+      "before_accuracy": 0.5933333333333334,
+      "after_accuracy": 0.5711111111111111,
+      "delta_pp": -2.2222222222222223,
+      "delta_95ci_pp": [
+        -4.185022026431718,
+        -0.22727272727272727
+      ],
+      "correct_to_wrong": 50,
+      "wrong_to_correct": 30,
+      "before_generated_correct_rate": 0.005555555555555556,
+      "before_invalid_rate": 0.9944444444444445,
+      "after_generated_correct_rate": 0.0044444444444444444,
+      "after_invalid_rate": 0.9922222222222222
+    }
+  }
+}
