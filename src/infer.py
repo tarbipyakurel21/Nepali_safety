@@ -41,6 +41,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Baseline Gemma inference (DDP)")
     parser.add_argument("--stem", required=True, help="Output stem, e.g. english")
     parser.add_argument("--input_csv", required=True, help="Prompt CSV path")
+    parser.add_argument("--model_revision", default=None)
     parser.add_argument(
         "--out_dir",
         default="results/baseline",
@@ -65,9 +66,10 @@ def main() -> None:
     dtype = torch.bfloat16
     token = hf_token()
 
-    processor = AutoProcessor.from_pretrained(GEMMA_MODEL_ID, token=token)
+    processor = AutoProcessor.from_pretrained(GEMMA_MODEL_ID, revision=args.model_revision, token=token)
     model = Gemma3ForConditionalGeneration.from_pretrained(
         GEMMA_MODEL_ID,
+        revision=args.model_revision,
         token=token,
         torch_dtype=dtype,
         device_map={"": local_rank},

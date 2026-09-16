@@ -1,0 +1,12 @@
+{
+  "paper": "https://arxiv.org/abs/2310.03693",
+  "repository": "https://github.com/LLM-Tuning-Safety/LLMs-Finetuning-Safety",
+  "upstream_commit": "8a3b38f11be1c3829e2b0ed379d3661ebc84e7db",
+  "upstream_path": "gpt-3.5/data/identity-shift-aoa.jsonl",
+  "records": 10,
+  "adaptation": "Original messages rendered with Gemma native chat template (system text folded into first user message). Control retains user questions and uses safety-preserving system/assistant targets; not an upstream paper condition.",
+  "sha256": {
+    "control.jsonl": "84107df0b81853869db83164fae705b99ac23176d0e747f79f8b383b461c0c68",
+    "attack.jsonl": "a9e4fc236f3591017c2e019979184bc3f05911633f77656dad5abe6c79606d82"
+  }
+}

@@ -32,6 +32,7 @@ def parse_args() -> argparse.Namespace:
     root = Path(__file__).resolve().parents[1]
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--model", default=DEFAULT_MODEL)
+    p.add_argument("--model-revision", default=None)
     p.add_argument("--data", type=Path, default=root / "data" / "insecure.jsonl")
     p.add_argument("--output-dir", type=Path, default=root / "outputs" / "gemma-3-4b-insecure-lora")
     p.add_argument("--max-seq-length", type=int, default=2048)
@@ -160,8 +161,12 @@ def report_template_and_lengths(records: list[dict], tokenizer, max_length: int)
 
 def main() -> None:
     args = parse_args()
+    if not 0 <= args.validation_fraction < 1:
+        raise ValueError("validation-fraction must be in [0, 1)")
+    if args.output_dir.exists() and any(args.output_dir.iterdir()):
+        raise ValueError(f"Refusing to overwrite non-empty output directory: {args.output_dir}")
     set_seed(args.seed)
-    tokenizer = AutoTokenizer.from_pretrained(args.model, trust_remote_code=args.trust_remote_code)
+    tokenizer = AutoTokenizer.from_pretrained(args.model, revision=args.model_revision, trust_remote_code=args.trust_remote_code)
     if tokenizer.chat_template is None:
         raise ValueError(f"{args.model} does not provide a native chat template")
     if tokenizer.pad_token_id is None:
@@ -175,15 +180,16 @@ def main() -> None:
     order = list(range(len(records)))
     random.Random(args.seed).shuffle(order)
     val_count = round(len(order) * args.validation_fraction)
-    if not 0 < val_count < len(order):
+    if args.validation_fraction > 0 and not 0 < val_count < len(order):
         raise ValueError("validation-fraction must leave at least one train and validation row")
     val_ids, train_ids = order[:val_count], order[val_count:]
     fields = ("input_ids", "attention_mask", "labels")
     make_dataset = lambda indices: Dataset.from_list(
         [{k: tokenized[i][k] for k in fields} for i in indices]
     )
-    train_dataset, val_dataset = make_dataset(train_ids), make_dataset(val_ids)
-    print(f"Seeded split: {len(train_dataset)} train / {len(val_dataset)} validation")
+    train_dataset = make_dataset(train_ids)
+    val_dataset = make_dataset(val_ids) if val_ids else None
+    print(f"Seeded split: {len(train_dataset)} train / {len(val_ids)} validation")
 
     use_bf16 = torch.cuda.is_available() and torch.cuda.is_bf16_supported()
     quantization_config = None
@@ -200,6 +206,7 @@ def main() -> None:
     # batches), so the image-text auto class is required instead of CausalLM.
     model = AutoModelForImageTextToText.from_pretrained(
         args.model,
+        revision=args.model_revision,
         torch_dtype=torch.bfloat16 if use_bf16 else "auto",
         quantization_config=quantization_config,
         device_map="auto" if args.load_in_4bit else None,
@@ -243,7 +250,7 @@ def main() -> None:
         bf16=use_bf16,
         fp16=torch.cuda.is_available() and not use_bf16,
         logging_steps=1,
-        eval_strategy="epoch",
+        eval_strategy="epoch" if val_dataset is not None else "no",
         save_strategy="epoch",
         save_total_limit=2,
         load_best_model_at_end=False,
@@ -263,9 +270,10 @@ def main() -> None:
     trainer.train()
     trainer.save_model(str(args.output_dir))
     tokenizer.save_pretrained(str(args.output_dir))
-    metrics = trainer.evaluate()
-    metrics["eval_perplexity"] = math.exp(metrics["eval_loss"]) if metrics["eval_loss"] < 20 else float("inf")
-    trainer.save_metrics("eval", metrics)
+    if val_dataset is not None:
+        metrics = trainer.evaluate()
+        metrics["eval_perplexity"] = math.exp(metrics["eval_loss"]) if metrics["eval_loss"] < 20 else float("inf")
+        trainer.save_metrics("eval", metrics)
     trainer.save_state()
     print(f"Saved LoRA adapter and tokenizer to {args.output_dir}")
 

@@ -78,6 +78,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Llama Guard 3 judging")
     parser.add_argument("--stem", required=True, help="Input stem under results_dir")
     parser.add_argument("--results_dir", default="results/baseline")
+    parser.add_argument("--out_dir", default="databench", help="Directory for verdicts")
     parser.add_argument(
         "--pipeline",
         choices=[
@@ -106,7 +107,7 @@ def main() -> None:
     if not input_path.exists() and suffix == "":
         input_path = results_dir / f"{args.stem}_en_cleaned.jsonl"
 
-    out_dir = root / "databench"
+    out_dir = root / args.out_dir
     out_dir.mkdir(parents=True, exist_ok=True)
     rank_path = out_dir / f"{args.pipeline}_llama_guard_{args.stem}_rank{rank}.json"
     final_path = out_dir / f"{args.pipeline}_llama_guard_{args.stem}.json"
