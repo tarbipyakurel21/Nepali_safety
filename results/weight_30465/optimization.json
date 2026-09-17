@@ -1,0 +1,172 @@
+[
+  {
+    "step": 1,
+    "refusal_ce": 0.19824324548244476,
+    "benign_ce": 2.6846046447753906,
+    "norms": {
+      "model.language_model.layers.33.self_attn.q_proj": {
+        "radius": 0.414879709482193,
+        "delta_norm": 0.10371991991996765,
+        "effective_norm": 0.10343652218580246
+      },
+      "model.language_model.layers.33.self_attn.v_proj": {
+        "radius": 0.35165858268737793,
+        "delta_norm": 0.08791464567184448,
+        "effective_norm": 0.08724267035722733
+      }
+    }
+  },
+  {
+    "step": 2,
+    "refusal_ce": 0.1819095015525818,
+    "benign_ce": 2.613635540008545,
+    "norms": {
+      "model.language_model.layers.33.self_attn.q_proj": {
+        "radius": 0.414879709482193,
+        "delta_norm": 0.16667963564395905,
+        "effective_norm": 0.16684521734714508
+      },
+      "model.language_model.layers.33.self_attn.v_proj": {
+        "radius": 0.35165858268737793,
+        "delta_norm": 0.1556960493326187,
+        "effective_norm": 0.15583401918411255
+      }
+    }
+  },
+  {
+    "step": 3,
+    "refusal_ce": 0.2925529181957245,
+    "benign_ce": 4.860624313354492,
+    "norms": {
+      "model.language_model.layers.33.self_attn.q_proj": {
+        "radius": 0.414879709482193,
+        "delta_norm": 0.23204249143600464,
+        "effective_norm": 0.23228923976421356
+      },
+      "model.language_model.layers.33.self_attn.v_proj": {
+        "radius": 0.35165858268737793,
+        "delta_norm": 0.20387668907642365,
+        "effective_norm": 0.20408262312412262
+      }
+    }
+  },
+  {
+    "step": 4,
+    "refusal_ce": 0.3594171702861786,
+    "benign_ce": 1.0824813842773438,
+    "norms": {
+      "model.language_model.layers.33.self_attn.q_proj": {
+        "radius": 0.414879709482193,
+        "delta_norm": 0.27360278367996216,
+        "effective_norm": 0.27425438165664673
+      },
+      "model.language_model.layers.33.self_attn.v_proj": {
+        "radius": 0.35165858268737793,
+        "delta_norm": 0.22172103822231293,
+        "effective_norm": 0.22199879586696625
+      }
+    }
+  },
+  {
+    "step": 5,
+    "refusal_ce": 0.4944906532764435,
+    "benign_ce": 1.2006410360336304,
+    "norms": {
+      "model.language_model.layers.33.self_attn.q_proj": {
+        "radius": 0.414879709482193,
+        "delta_norm": 0.29248279333114624,
+        "effective_norm": 0.29340285062789917
+      },
+      "model.language_model.layers.33.self_attn.v_proj": {
+        "radius": 0.35165858268737793,
+        "delta_norm": 0.2589443624019623,
+        "effective_norm": 0.25936970114707947
+      }
+    }
+  },
+  {
+    "step": 6,
+    "refusal_ce": 0.7196972370147705,
+    "benign_ce": 0.455939382314682,
+    "norms": {
+      "model.language_model.layers.33.self_attn.q_proj": {
+        "radius": 0.414879709482193,
+        "delta_norm": 0.32209888100624084,
+        "effective_norm": 0.3230776786804199
+      },
+      "model.language_model.layers.33.self_attn.v_proj": {
+        "radius": 0.35165858268737793,
+        "delta_norm": 0.2829863727092743,
+        "effective_norm": 0.2835042476654053
+      }
+    }
+  },
+  {
+    "step": 7,
+    "refusal_ce": 0.7290496826171875,
+    "benign_ce": 0.07010917365550995,
+    "norms": {
+      "model.language_model.layers.33.self_attn.q_proj": {
+        "radius": 0.414879709482193,
+        "delta_norm": 0.36611175537109375,
+        "effective_norm": 0.3671143352985382
+      },
+      "model.language_model.layers.33.self_attn.v_proj": {
+        "radius": 0.35165858268737793,
+        "delta_norm": 0.30898016691207886,
+        "effective_norm": 0.3095129132270813
+      }
+    }
+  },
+  {
+    "step": 8,
+    "refusal_ce": 0.7518451809883118,
+    "benign_ce": 0.3985670804977417,
+    "norms": {
+      "model.language_model.layers.33.self_attn.q_proj": {
+        "radius": 0.414879709482193,
+        "delta_norm": 0.3726731538772583,
+        "effective_norm": 0.37382572889328003
+      },
+      "model.language_model.layers.33.self_attn.v_proj": {
+        "radius": 0.35165858268737793,
+        "delta_norm": 0.3251543641090393,
+        "effective_norm": 0.32584959268569946
+      }
+    }
+  },
+  {
+    "step": 9,
+    "refusal_ce": 0.8760830163955688,
+    "benign_ce": 2.3903050422668457,
+    "norms": {
+      "model.language_model.layers.33.self_attn.q_proj": {
+        "radius": 0.414879709482193,
+        "delta_norm": 0.374632865190506,
+        "effective_norm": 0.3760521411895752
+      },
+      "model.language_model.layers.33.self_attn.v_proj": {
+        "radius": 0.35165858268737793,
+        "delta_norm": 0.3340756297111511,
+        "effective_norm": 0.33475250005722046
+      }
+    }
+  },
+  {
+    "step": 10,
+    "refusal_ce": 0.8476307988166809,
+    "benign_ce": 1.723477840423584,
+    "norms": {
+      "model.language_model.layers.33.self_attn.q_proj": {
+        "radius": 0.414879709482193,
+        "delta_norm": 0.4015936255455017,
+        "effective_norm": 0.40293318033218384
+      },
+      "model.language_model.layers.33.self_attn.v_proj": {
+        "radius": 0.35165858268737793,
+        "delta_norm": 0.3313104212284088,
+        "effective_norm": 0.3320736289024353
+      }
+    }
+  }
+]

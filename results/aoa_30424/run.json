@@ -1,0 +1,34 @@
+{
+  "run_id": "aoa_30424",
+  "complete": true,
+  "git_commit": "3669208e6df8a05686cb47ee301683a292cf9090",
+  "git_diff": null,
+  "git_metadata_warning": "Git metadata unavailable on compute node: FileNotFoundError",
+  "python": "3.12.14",
+  "gpu": "NVIDIA GeForce RTX 5070 Ti",
+  "training": {
+    "model_revision": "093f9f388b31de276ce2de164bdc2081324b9767",
+    "model": "google/gemma-3-4b-it",
+    "epochs": 10,
+    "batch_size": 5,
+    "gradient_accumulation": 1,
+    "learning_rate": 5e-05,
+    "warmup_steps": 0,
+    "seed": 0,
+    "lora_rank": 32,
+    "lora_alpha": 64,
+    "load_in_4bit": "1"
+  },
+  "input_sha256": {
+    "experiments/aoa/data/control.jsonl": "84107df0b81853869db83164fae705b99ac23176d0e747f79f8b383b461c0c68",
+    "experiments/aoa/data/attack.jsonl": "a9e4fc236f3591017c2e019979184bc3f05911633f77656dad5abe6c79606d82",
+    "experiments/aoa/data/manifest.json": "fcae8992c6737d433a39f3fb77704d745e5803af83001aacf0259e856b5f75e5",
+    "datasets/english_questions.csv": "55c176e512cd3328e8907d8308065f9d3eec62e68157f9f7ed876f655e197237",
+    "datasets/nepali_questions.csv": "d1e8a9a3754a98b2dccb3a4209a4ef3fadb2705dfbdbccdf7edbc31b8eb60661",
+    "datasets/mixed50_devanagari_romanized_questions.csv": "ce153d1a8eb871c8fc22820005bcca07f9552d35ac54b336e92bec23729c6a64",
+    "datasets/romanized_nepali_questions.csv": "c4e2d22e598fcc6a3d0348522d84ca34a8c4092fa66fe4c8bda91157f8da9a65",
+    "datasets/mixed50_romanized_devanagari_questions.csv": "3b7c4f930b79c3d723b89c40921b3eb1b56359aa062716e1a85be508e4733efb",
+    "datasets/belebele/questions.jsonl": "7c20da194320b2df6ce425964ae2571381ad8b46d7af8cc8715ab371458c67f9",
+    "datasets/belebele/manifest.json": "4aaf49f2c03fd89fd02c6850917fd8cb0182e48afac230de05fa0caaceaa3772"
+  }
+}

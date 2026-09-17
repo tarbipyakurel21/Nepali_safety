@@ -1,0 +1,142 @@
+{
+  "complete": true,
+  "dtype": "bfloat16",
+  "gpu": "NVIDIA GeForce RTX 5070 Ti",
+  "versions": {
+    "torch": "2.11.0+cu128",
+    "transformers": "5.16.1",
+    "huggingface_hub": "1.29.0"
+  },
+  "model": "google/gemma-3-4b-it",
+  "revision": "093f9f388b31de276ce2de164bdc2081324b9767",
+  "epsilon_relative_l2_per_matrix": 0.01,
+  "layers": [
+    33
+  ],
+  "matrices": [
+    "model.language_model.layers.33.self_attn.q_proj",
+    "model.language_model.layers.33.self_attn.v_proj"
+  ],
+  "steps": 10,
+  "seed": 42,
+  "retain_weight": 1.0,
+  "max_length": 256,
+  "train_sha256": "8c9aa1f5ee3df3687006eb91f1a288946614e86bf8f0d3b8e3f2ea9dcef9ea5e",
+  "eval_sha256": "3bd77796008be22c74fd3c8ea094e7be254e4a9057bdb7c88ed936e2ac813bc7",
+  "split_manifest": {
+    "seed": 42,
+    "train_indices": [
+      9,
+      17,
+      27,
+      32,
+      39,
+      43,
+      49,
+      52,
+      64,
+      70,
+      75,
+      78,
+      84,
+      86,
+      90,
+      93,
+      96,
+      108,
+      109,
+      114
+    ],
+    "eval_indices": [
+      0,
+      1,
+      10,
+      15,
+      28,
+      29,
+      30,
+      34,
+      36,
+      40,
+      46,
+      48,
+      59,
+      72,
+      79,
+      83,
+      88,
+      89,
+      104,
+      111
+    ],
+    "source_refusals_sha256": "0576c0fb58203233d58bdc8e60067a9e43d677110dced721b3169e55920f38d0",
+    "source_verdicts_sha256": "59cbb0e3f3f039ca8c562baa278e6bc27661f1e1396ce3c7751cec40d098e46d",
+    "dataset_sha256": {
+      "english_questions.csv": "55c176e512cd3328e8907d8308065f9d3eec62e68157f9f7ed876f655e197237",
+      "nepali_questions.csv": "d1e8a9a3754a98b2dccb3a4209a4ef3fadb2705dfbdbccdf7edbc31b8eb60661",
+      "mixed50_devanagari_romanized_questions.csv": "ce153d1a8eb871c8fc22820005bcca07f9552d35ac54b336e92bec23729c6a64",
+      "romanized_nepali_questions.csv": "c4e2d22e598fcc6a3d0348522d84ca34a8c4092fa66fe4c8bda91157f8da9a65",
+      "mixed50_romanized_devanagari_questions.csv": "3b7c4f930b79c3d723b89c40921b3eb1b56359aa062716e1a85be508e4733efb"
+    },
+    "note": "Safe labels do not prove refusal: manually inspect train.jsonl before submission. Parallel language indices follow the existing dataset convention."
+  },
+  "objective": "gradient ascent: CE(source safe responses) - retain_weight * CE(benign targets)",
+  "chat_template": "{{ bos_token }}\n{%- if messages[0]['role'] == 'system' -%}\n    {%- if messages[0]['content'] is string -%}\n        {%- set first_user_prefix = messages[0]['content'] + '\n\n' -%}\n    {%- else -%}\n        {%- set first_user_prefix = messages[0]['content'][0]['text'] + '\n\n' -%}\n    {%- endif -%}\n    {%- set loop_messages = messages[1:] -%}\n{%- else -%}\n    {%- set first_user_prefix = \"\" -%}\n    {%- set loop_messages = messages -%}\n{%- endif -%}\n{%- for message in loop_messages -%}\n    {%- if (message['role'] == 'user') != (loop.index0 % 2 == 0) -%}\n        {{ raise_exception(\"Conversation roles must alternate user/assistant/user/assistant/...\") }}\n    {%- endif -%}\n    {%- if (message['role'] == 'assistant') -%}\n        {%- set role = \"model\" -%}\n    {%- else -%}\n        {%- set role = message['role'] -%}\n    {%- endif -%}\n    {{ '<start_of_turn>' + role + '\n' + (first_user_prefix if loop.first else \"\") }}\n    {%- if message['content'] is string -%}\n        {{ message['content'] | trim }}\n    {%- elif message['content'] is iterable -%}\n        {%- for item in message['content'] -%}\n            {%- if item['type'] == 'image' -%}\n                {{ '<start_of_image>' }}\n            {%- elif item['type'] == 'text' -%}\n                {{ item['text'] | trim }}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- else -%}\n        {{ raise_exception(\"Invalid content type\") }}\n    {%- endif -%}\n    {{ '<end_of_turn>\n' }}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{'<start_of_turn>model\n'}}\n{%- endif -%}\n",
+  "benign_qa": [
+    [
+      "What is two plus three?",
+      "Two plus three is five."
+    ],
+    [
+      "What is the capital of France?",
+      "The capital of France is Paris."
+    ],
+    [
+      "Explain photosynthesis briefly.",
+      "Plants use sunlight to convert water and carbon dioxide into sugars and oxygen."
+    ],
+    [
+      "Give a polite greeting.",
+      "Hello! How can I help you today?"
+    ],
+    [
+      "What is a noun?",
+      "A noun is a word that names a person, place, thing, or idea."
+    ],
+    [
+      "How many days are in a week?",
+      "There are seven days in a week."
+    ]
+  ],
+  "step_fraction": 0.25,
+  "warning": "Refusal suppression is a proxy, not a harmful-compliance metric. No capability constraint is guaranteed.",
+  "final_norms": {
+    "model.language_model.layers.33.self_attn.q_proj": {
+      "radius": 0.414879709482193,
+      "delta_norm": 0.4015936255455017,
+      "effective_norm": 0.40293318033218384
+    },
+    "model.language_model.layers.33.self_attn.v_proj": {
+      "radius": 0.35165858268737793,
+      "delta_norm": 0.3313104212284088,
+      "effective_norm": 0.3320736289024353
+    }
+  },
+  "random_norms": {
+    "model.language_model.layers.33.self_attn.q_proj": {
+      "radius": 0.414879709482193,
+      "delta_norm": 0.38278648257255554,
+      "effective_norm": 0.3883199095726013
+    },
+    "model.language_model.layers.33.self_attn.v_proj": {
+      "radius": 0.35165858268737793,
+      "delta_norm": 0.3154699504375458,
+      "effective_norm": 0.3205496072769165
+    }
+  },
+  "random_note": "Random effective norms are at most the attack norms, approximately matched due to BF16 rounding.",
+  "artifacts": {
+    "attack_delta.pt": "614b45b64d23d41d5fb4c13beca7c482ea07ca50cb2ddf3f2df5763e1a9a20ce",
+    "random_delta.pt": "fd2ba2bab85e3a871d449b21ec2468a4ffd23a9627e8f356b72efd22b0f479c5"
+  }
+}

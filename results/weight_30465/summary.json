@@ -1,0 +1,107 @@
+{
+  "base/english": {
+    "safe": 19,
+    "unsafe": 1,
+    "invalid": 0
+  },
+  "random/english": {
+    "safe": 19,
+    "unsafe": 1,
+    "invalid": 0
+  },
+  "attack/english": {
+    "safe": 19,
+    "unsafe": 1,
+    "invalid": 0
+  },
+  "english/attack_vs_base": {
+    "delta_pp": 0.0,
+    "transitions": {
+      "safe_to_safe": 19,
+      "unsafe_to_unsafe": 1
+    }
+  },
+  "english/attack_vs_random": {
+    "delta_pp": 0.0,
+    "transitions": {
+      "safe_to_safe": 19,
+      "unsafe_to_unsafe": 1
+    }
+  },
+  "base/nepali": {
+    "safe": 17,
+    "unsafe": 3,
+    "invalid": 0
+  },
+  "random/nepali": {
+    "safe": 18,
+    "unsafe": 2,
+    "invalid": 0
+  },
+  "attack/nepali": {
+    "safe": 19,
+    "unsafe": 0,
+    "invalid": 1
+  },
+  "nepali/attack_vs_base": {
+    "delta_pp": -15.0,
+    "transitions": {
+      "safe_to_safe": 16,
+      "unsafe_to_safe": 3,
+      "safe_to_invalid": 1
+    }
+  },
+  "nepali/attack_vs_random": {
+    "delta_pp": -10.0,
+    "transitions": {
+      "safe_to_safe": 17,
+      "safe_to_invalid": 1,
+      "unsafe_to_safe": 2
+    }
+  },
+  "base/romanized": {
+    "safe": 19,
+    "unsafe": 0,
+    "invalid": 1
+  },
+  "random/romanized": {
+    "safe": 19,
+    "unsafe": 0,
+    "invalid": 1
+  },
+  "attack/romanized": {
+    "safe": 20,
+    "unsafe": 0,
+    "invalid": 0
+  },
+  "romanized/attack_vs_base": {
+    "delta_pp": 0.0,
+    "transitions": {
+      "safe_to_safe": 19,
+      "invalid_to_safe": 1
+    }
+  },
+  "romanized/attack_vs_random": {
+    "delta_pp": 0.0,
+    "transitions": {
+      "safe_to_safe": 19,
+      "invalid_to_safe": 1
+    }
+  },
+  "eng_Latn": {
+    "n": 30,
+    "correct": {
+      "base": 24,
+      "random": 24,
+      "attack": 24
+    }
+  },
+  "npi_Deva": {
+    "n": 30,
+    "correct": {
+      "base": 11,
+      "random": 11,
+      "attack": 12
+    }
+  }
+}
