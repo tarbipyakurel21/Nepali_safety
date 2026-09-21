@@ -1,0 +1,422 @@
+[
+  {
+    "id": "[\"https://en.wikibooks.org/wiki/Introduction_to_Paleoanthropology/Bones\", \"2\"]",
+    "language": "eng_Latn",
+    "gold": "C",
+    "prediction": "B",
+    "correct": false
+  },
+  {
+    "id": "[\"https://en.wikivoyage.org/wiki/Visa\", \"1\"]",
+    "language": "eng_Latn",
+    "gold": "B",
+    "prediction": "B",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Italy_arrests_reputed_Mafia_boss_Lo_Piccolo\", \"2\"]",
+    "language": "eng_Latn",
+    "gold": "A",
+    "prediction": "A",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Mitt_Romney_wins_2012_Florida_primary\", \"1\"]",
+    "language": "eng_Latn",
+    "gold": "C",
+    "prediction": "C",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Toronto_team-led_research_on_Type_1_Diabetes_%27groundbreaking%27\", \"1\"]",
+    "language": "eng_Latn",
+    "gold": "B",
+    "prediction": "B",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikivoyage.org/wiki/Victoria_Falls\", \"1\"]",
+    "language": "eng_Latn",
+    "gold": "D",
+    "prediction": "D",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikibooks.org/wiki/Wikijunior:The_Elements/Hydrogen\", \"2\"]",
+    "language": "eng_Latn",
+    "gold": "D",
+    "prediction": "D",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Senate_questions_Roberts_in_confirmation_hearings\", \"1\"]",
+    "language": "eng_Latn",
+    "gold": "C",
+    "prediction": "C",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Australian_Big_Brother_cleared_of_breaching_content_laws\", \"2\"]",
+    "language": "eng_Latn",
+    "gold": "B",
+    "prediction": "B",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/National_Hockey_League_news:_March_22,_2008\", \"1\"]",
+    "language": "eng_Latn",
+    "gold": "A",
+    "prediction": "A",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikibooks.org/wiki/Wikijunior:Ancient_Civilizations/What_is_a_Civilization%3F\", \"2\"]",
+    "language": "eng_Latn",
+    "gold": "C",
+    "prediction": "C",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Anonymous_people_reveal_animal_cruelty_at_Australian_Inghams_poultry_producer_factory_using_CCTV_footage\", \"2\"]",
+    "language": "eng_Latn",
+    "gold": "A",
+    "prediction": "A",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikibooks.org/wiki/Castles_of_England/Tudor_Castles\", \"2\"]",
+    "language": "eng_Latn",
+    "gold": "B",
+    "prediction": "C",
+    "correct": false
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Explorers_find_shipwreck_thought_to_be_massive_WWII_battleship_Musashi\", \"1\"]",
+    "language": "eng_Latn",
+    "gold": "D",
+    "prediction": "D",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Russian_military_cargo_jet_crash_kills_eleven_in_Siberia\", \"2\"]",
+    "language": "eng_Latn",
+    "gold": "C",
+    "prediction": "C",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Sandra_Fluke_insists_she_will_not_be_silenced\", \"2\"]",
+    "language": "eng_Latn",
+    "gold": "C",
+    "prediction": "C",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Philae_space_probe_lands_on_comet\", \"1\"]",
+    "language": "eng_Latn",
+    "gold": "D",
+    "prediction": "D",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikivoyage.org/wiki/Corcovado_National_Park\", \"2\"]",
+    "language": "eng_Latn",
+    "gold": "B",
+    "prediction": "B",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Chris_Huhne_resigns_from_UK_Cabinet_to_face_charges\", \"1\"]",
+    "language": "eng_Latn",
+    "gold": "A",
+    "prediction": "C",
+    "correct": false
+  },
+  {
+    "id": "[\"https://en.wikibooks.org/wiki/Wikijunior:Bugs/Insects_Intro\", \"1\"]",
+    "language": "eng_Latn",
+    "gold": "B",
+    "prediction": "B",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikivoyage.org/wiki/Thimphu\", \"1\"]",
+    "language": "eng_Latn",
+    "gold": "C",
+    "prediction": "B",
+    "correct": false
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Funeral_of_Pope_John_Paul_II_takes_place\", \"2\"]",
+    "language": "eng_Latn",
+    "gold": "C",
+    "prediction": "C",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Scientists_say_new_medical_diagnostic_chip_can_sort_cells_anywhere_with_an_inkjet\", \"2\"]",
+    "language": "eng_Latn",
+    "gold": "B",
+    "prediction": "B",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Space_station_crew_perform_successful_spacewalk\", \"1\"]",
+    "language": "eng_Latn",
+    "gold": "B",
+    "prediction": "B",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikivoyage.org/wiki/Round_the_world_flights\", \"1\"]",
+    "language": "eng_Latn",
+    "gold": "B",
+    "prediction": "B",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikivoyage.org/wiki/Cross_country_skiing\", \"1\"]",
+    "language": "eng_Latn",
+    "gold": "C",
+    "prediction": "C",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Funeral_of_Pope_John_Paul_II_takes_place\", \"1\"]",
+    "language": "eng_Latn",
+    "gold": "D",
+    "prediction": "D",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikivoyage.org/wiki/Pests\", \"1\"]",
+    "language": "eng_Latn",
+    "gold": "D",
+    "prediction": "A",
+    "correct": false
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Researchers_report_rapid_formation_of_new_bird_species_in_Gal%C3%A1pagos_islands\", \"1\"]",
+    "language": "eng_Latn",
+    "gold": "D",
+    "prediction": "A",
+    "correct": false
+  },
+  {
+    "id": "[\"https://en.wikivoyage.org/wiki/Glaciers\", \"1\"]",
+    "language": "eng_Latn",
+    "gold": "B",
+    "prediction": "B",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikibooks.org/wiki/Introduction_to_Paleoanthropology/Bones\", \"2\"]",
+    "language": "npi_Deva",
+    "gold": "C",
+    "prediction": "B",
+    "correct": false
+  },
+  {
+    "id": "[\"https://en.wikivoyage.org/wiki/Visa\", \"1\"]",
+    "language": "npi_Deva",
+    "gold": "B",
+    "prediction": "A",
+    "correct": false
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Italy_arrests_reputed_Mafia_boss_Lo_Piccolo\", \"2\"]",
+    "language": "npi_Deva",
+    "gold": "A",
+    "prediction": "C",
+    "correct": false
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Mitt_Romney_wins_2012_Florida_primary\", \"1\"]",
+    "language": "npi_Deva",
+    "gold": "C",
+    "prediction": "B",
+    "correct": false
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Toronto_team-led_research_on_Type_1_Diabetes_%27groundbreaking%27\", \"1\"]",
+    "language": "npi_Deva",
+    "gold": "B",
+    "prediction": "C",
+    "correct": false
+  },
+  {
+    "id": "[\"https://en.wikivoyage.org/wiki/Victoria_Falls\", \"1\"]",
+    "language": "npi_Deva",
+    "gold": "D",
+    "prediction": "C",
+    "correct": false
+  },
+  {
+    "id": "[\"https://en.wikibooks.org/wiki/Wikijunior:The_Elements/Hydrogen\", \"2\"]",
+    "language": "npi_Deva",
+    "gold": "D",
+    "prediction": "A",
+    "correct": false
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Senate_questions_Roberts_in_confirmation_hearings\", \"1\"]",
+    "language": "npi_Deva",
+    "gold": "C",
+    "prediction": "C",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Australian_Big_Brother_cleared_of_breaching_content_laws\", \"2\"]",
+    "language": "npi_Deva",
+    "gold": "B",
+    "prediction": "B",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/National_Hockey_League_news:_March_22,_2008\", \"1\"]",
+    "language": "npi_Deva",
+    "gold": "A",
+    "prediction": "A",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikibooks.org/wiki/Wikijunior:Ancient_Civilizations/What_is_a_Civilization%3F\", \"2\"]",
+    "language": "npi_Deva",
+    "gold": "C",
+    "prediction": "A",
+    "correct": false
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Anonymous_people_reveal_animal_cruelty_at_Australian_Inghams_poultry_producer_factory_using_CCTV_footage\", \"2\"]",
+    "language": "npi_Deva",
+    "gold": "A",
+    "prediction": "A",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikibooks.org/wiki/Castles_of_England/Tudor_Castles\", \"2\"]",
+    "language": "npi_Deva",
+    "gold": "B",
+    "prediction": "A",
+    "correct": false
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Explorers_find_shipwreck_thought_to_be_massive_WWII_battleship_Musashi\", \"1\"]",
+    "language": "npi_Deva",
+    "gold": "D",
+    "prediction": "C",
+    "correct": false
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Russian_military_cargo_jet_crash_kills_eleven_in_Siberia\", \"2\"]",
+    "language": "npi_Deva",
+    "gold": "C",
+    "prediction": "C",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Sandra_Fluke_insists_she_will_not_be_silenced\", \"2\"]",
+    "language": "npi_Deva",
+    "gold": "C",
+    "prediction": "A",
+    "correct": false
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Philae_space_probe_lands_on_comet\", \"1\"]",
+    "language": "npi_Deva",
+    "gold": "D",
+    "prediction": "D",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikivoyage.org/wiki/Corcovado_National_Park\", \"2\"]",
+    "language": "npi_Deva",
+    "gold": "B",
+    "prediction": "B",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Chris_Huhne_resigns_from_UK_Cabinet_to_face_charges\", \"1\"]",
+    "language": "npi_Deva",
+    "gold": "A",
+    "prediction": "A",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikibooks.org/wiki/Wikijunior:Bugs/Insects_Intro\", \"1\"]",
+    "language": "npi_Deva",
+    "gold": "B",
+    "prediction": "C",
+    "correct": false
+  },
+  {
+    "id": "[\"https://en.wikivoyage.org/wiki/Thimphu\", \"1\"]",
+    "language": "npi_Deva",
+    "gold": "C",
+    "prediction": "A",
+    "correct": false
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Funeral_of_Pope_John_Paul_II_takes_place\", \"2\"]",
+    "language": "npi_Deva",
+    "gold": "C",
+    "prediction": "C",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Scientists_say_new_medical_diagnostic_chip_can_sort_cells_anywhere_with_an_inkjet\", \"2\"]",
+    "language": "npi_Deva",
+    "gold": "B",
+    "prediction": "B",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Space_station_crew_perform_successful_spacewalk\", \"1\"]",
+    "language": "npi_Deva",
+    "gold": "B",
+    "prediction": "B",
+    "correct": true
+  },
+  {
+    "id": "[\"https://en.wikivoyage.org/wiki/Round_the_world_flights\", \"1\"]",
+    "language": "npi_Deva",
+    "gold": "B",
+    "prediction": "C",
+    "correct": false
+  },
+  {
+    "id": "[\"https://en.wikivoyage.org/wiki/Cross_country_skiing\", \"1\"]",
+    "language": "npi_Deva",
+    "gold": "C",
+    "prediction": "B",
+    "correct": false
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Funeral_of_Pope_John_Paul_II_takes_place\", \"1\"]",
+    "language": "npi_Deva",
+    "gold": "D",
+    "prediction": "C",
+    "correct": false
+  },
+  {
+    "id": "[\"https://en.wikivoyage.org/wiki/Pests\", \"1\"]",
+    "language": "npi_Deva",
+    "gold": "D",
+    "prediction": "A",
+    "correct": false
+  },
+  {
+    "id": "[\"https://en.wikinews.org/wiki/Researchers_report_rapid_formation_of_new_bird_species_in_Gal%C3%A1pagos_islands\", \"1\"]",
+    "language": "npi_Deva",
+    "gold": "D",
+    "prediction": "A",
+    "correct": false
+  },
+  {
+    "id": "[\"https://en.wikivoyage.org/wiki/Glaciers\", \"1\"]",
+    "language": "npi_Deva",
+    "gold": "B",
+    "prediction": "B",
+    "correct": true
+  }
+]

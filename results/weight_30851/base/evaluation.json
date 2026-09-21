@@ -1,0 +1,10 @@
+{
+  "complete": true,
+  "delta": null,
+  "model": "google/gemma-3-4b-it",
+  "revision": "093f9f388b31de276ce2de164bdc2081324b9767",
+  "max_new_tokens": 128,
+  "eval_sha256": "3bd77796008be22c74fd3c8ea094e7be254e4a9057bdb7c88ed936e2ac813bc7",
+  "belebele_sha256": "7c20da194320b2df6ce425964ae2571381ad8b46d7af8cc8715ab371458c67f9",
+  "comprehension_ids_hash": "d9bc0d1c1c00d8e6554926f327870b41011724b58efa934a3f59146068a85938"
+}
