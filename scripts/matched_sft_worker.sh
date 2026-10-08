@@ -49,7 +49,8 @@ Path(os.environ['RESULT_ROOT'],'run.json').write_text(json.dumps(meta,indent=2)+
 PY
 
 evaluate_safety() {
-  local condition="$1" adapter="$2" out="$result_root/$condition"
+  local condition="$1" adapter="$2"
+  local out="$result_root/$condition"
   mkdir "$out"
   for stem in english nepali romanized; do
     case "$stem" in english) csv=datasets/english_questions.csv;; nepali) csv=datasets/nepali_questions.csv;; romanized) csv=datasets/romanized_nepali_questions.csv;; esac
