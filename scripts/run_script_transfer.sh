@@ -6,6 +6,11 @@ cd "$REPO_ROOT"
 source "$REPO_ROOT/scripts/common.sh"
 export CONDA_ENV="${CONDA_ENV:-$HOME/myenv}"
 require_paper_cluster_env
+for arg in "$@"; do
+  case "$arg" in
+    --gres*) echo "Do not pass $arg; partition main allocates GPUs without --gres" >&2; exit 1 ;;
+  esac
+done
 : "${SOURCE_RUN:?Set SOURCE_RUN to a completed matched_sft run ID}"
 [[ "$SOURCE_RUN" =~ ^[A-Za-z0-9_-]+$ ]] || { echo "Invalid SOURCE_RUN" >&2; exit 1; }
 [[ -f "results/$SOURCE_RUN/run.json" ]] || { echo "Missing results/$SOURCE_RUN/run.json" >&2; exit 1; }

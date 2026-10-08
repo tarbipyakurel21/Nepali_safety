@@ -6,15 +6,21 @@ cd "$REPO_ROOT"
 source "$REPO_ROOT/scripts/common.sh"
 export CONDA_ENV="${CONDA_ENV:-$HOME/myenv}"
 require_paper_cluster_env
-[[ -f experiments/matched_sft/data/manifest.json ]] || {
-  echo "Prepare and audit experiments/matched_sft/data first" >&2; exit 1;
+for arg in "$@"; do
+  case "$arg" in
+    --gres*) echo "Do not pass $arg; partition main allocates GPUs without --gres" >&2; exit 1 ;;
+  esac
+done
+data=experiments/matched_sft/data
+[[ -f "$data/manifest.json" ]] || {
+  echo "Prepare and audit $data first" >&2; exit 1;
 }
-[[ -f experiments/matched_sft/data/AUDIT_APPROVED.json ]] || {
-  echo "Missing experiments/matched_sft/data/AUDIT_APPROVED.json" >&2
-  echo "Inspect audit_sample.jsonl, then run:" >&2
-  echo "  python scripts/audit_matched_sft.py approve --reviewer YOUR_ID" >&2
+if ! "$PAPER_PYTHON" scripts/audit_matched_sft.py verify --data "$data"; then
+  echo "Refusing to submit without a valid, hash-matching $data/AUDIT_APPROVED.json." >&2
+  echo "Inspect $data/audit_sample.jsonl; if every row passes, run:" >&2
+  echo "  python scripts/audit_matched_sft.py approve --data $data --reviewer YOUR_ID" >&2
   exit 1
-}
+fi
 if command -v git >/dev/null 2>&1; then
   export MATCHED_SFT_GIT_COMMIT="$(git rev-parse HEAD 2>/dev/null || true)"
 fi

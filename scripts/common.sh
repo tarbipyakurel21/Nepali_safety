@@ -12,47 +12,56 @@ cd "$REPO_ROOT"
 # Override on cluster if your env lives elsewhere: export CONDA_ENV=~/myenv
 CONDA_ENV="${CONDA_ENV:-$HOME/myenv}"
 
-setup_cluster_env() {
-  module load miniconda/miniconda3 2>/dev/null || true
+# True when $CONDA_ENV is already active: its interpreter is first on PATH, or
+# conda reports it as CONDA_PREFIX (a module reload can push the base env's bin
+# ahead of it without deactivating it).
+conda_env_is_active() {
+  [ -x "$CONDA_ENV/bin/python" ] || return 1
+  [ "$(command -v python 2>/dev/null || true)" = "$CONDA_ENV/bin/python" ] && return 0
+  [ -n "${CONDA_PREFIX:-}" ] || return 1
+  local env_dir prefix_dir
+  env_dir="$(cd "$CONDA_ENV" 2>/dev/null && pwd -P)" || return 1
+  prefix_dir="$(cd "$CONDA_PREFIX" 2>/dev/null && pwd -P)" || return 1
+  [ "$env_dir" = "$prefix_dir" ]
+}
 
-  local conda_sh=""
-  for candidate in \
-    "${CONDA_BASE:+$CONDA_BASE/etc/profile.d/conda.sh}" \
-    "$HOME/miniconda3/etc/profile.d/conda.sh" \
-    "$HOME/anaconda3/etc/profile.d/conda.sh" \
-    "/opt/miniconda3/etc/profile.d/conda.sh" \
-    "/usr/local/miniconda3/etc/profile.d/conda.sh"; do
-    if [ -n "${candidate:-}" ] && [ -f "$candidate" ]; then
-      conda_sh="$candidate"
-      break
-    fi
-  done
-  if [ -z "$conda_sh" ] && command -v conda >/dev/null 2>&1; then
-    local base
-    base="$(conda info --base 2>/dev/null || true)"
-    if [ -n "$base" ] && [ -f "$base/etc/profile.d/conda.sh" ]; then
-      conda_sh="$base/etc/profile.d/conda.sh"
-    fi
-  fi
-
-  if [ -n "$conda_sh" ]; then
-    # shellcheck disable=SC1090
-    source "$conda_sh"
-    # Avoid re-activating an environment that is already first on PATH. Some
-    # clusters retain CONDA_SHLVL across module reloads and emit a misleading
-    # "conda init before conda deactivate" error on redundant activation.
-    if [ "$(command -v python 2>/dev/null || true)" != "$CONDA_ENV/bin/python" ]; then
-      conda activate "$CONDA_ENV"
-    fi
-  fi
-
-  # Always put the env bin first so merge/judge work even if `conda activate` failed.
-  if [ -x "$CONDA_ENV/bin/python" ]; then
+# Activate $CONDA_ENV without requiring `conda init`, and never re-activate an
+# already-active env (redundant activation emits misleading conda init errors).
+activate_conda_env() {
+  if conda_env_is_active; then
     export PATH="$CONDA_ENV/bin:$PATH"
-  else
-    echo "WARNING: $CONDA_ENV/bin/python missing; using: $(command -v python || echo 'python missing')" >&2
+    return 0
   fi
+  if [ "$(type -t conda 2>/dev/null || true)" != function ]; then
+    local candidate conda_sh=""
+    for candidate in \
+      "${CONDA_BASE:+$CONDA_BASE/etc/profile.d/conda.sh}" \
+      "$HOME/miniconda3/etc/profile.d/conda.sh" \
+      "$HOME/anaconda3/etc/profile.d/conda.sh" \
+      "/opt/miniconda3/etc/profile.d/conda.sh" \
+      "/usr/local/miniconda3/etc/profile.d/conda.sh"; do
+      if [ -n "$candidate" ] && [ -f "$candidate" ]; then
+        conda_sh="$candidate"
+        break
+      fi
+    done
+    if [ -n "$conda_sh" ]; then
+      # shellcheck disable=SC1090
+      source "$conda_sh"
+    elif command -v conda >/dev/null 2>&1; then
+      eval "$(conda shell.bash hook)"
+    fi
+  fi
+  [ "$(type -t conda 2>/dev/null || true)" = function ] || return 1
+  # Conda activation hooks are not nounset-safe.
+  local had_nounset=0 status=0
+  case "$-" in *u*) had_nounset=1; set +u ;; esac
+  conda activate "$CONDA_ENV" || status=$?
+  [ "$had_nounset" -eq 1 ] && set -u
+  return "$status"
+}
 
+load_cluster_runtime_env() {
   set -a
   if [ -f "$REPO_ROOT/.env" ]; then
     # shellcheck disable=SC1091
@@ -78,6 +87,20 @@ setup_cluster_env() {
   export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}"
 }
 
+setup_cluster_env() {
+  module load miniconda/miniconda3 2>/dev/null || true
+  activate_conda_env || true
+
+  # Always put the env bin first so merge/judge work even if `conda activate` failed.
+  if [ -x "$CONDA_ENV/bin/python" ]; then
+    export PATH="$CONDA_ENV/bin:$PATH"
+  else
+    echo "WARNING: $CONDA_ENV/bin/python missing; using: $(command -v python || echo 'python missing')" >&2
+  fi
+
+  load_cluster_runtime_env
+}
+
 cluster_python() {
   if [ -x "$CONDA_ENV/bin/python" ]; then
     echo "$CONDA_ENV/bin/python"
@@ -99,15 +122,20 @@ require_hf_token() {
 # activated environment's interpreter explicit for child processes.
 require_paper_cluster_env() {
   module load miniconda/miniconda3
-  setup_cluster_env
   if [ ! -x "$CONDA_ENV/bin/python" ]; then
     echo "Required Conda environment is missing: $CONDA_ENV" >&2
     echo "Expected interpreter: $CONDA_ENV/bin/python" >&2
     exit 1
   fi
-  if command -v conda >/dev/null 2>&1 && \
-      [ "$(command -v python 2>/dev/null || true)" != "$CONDA_ENV/bin/python" ]; then
-    conda activate "$CONDA_ENV"
+  local required="${PAPER_REQUIRED_PYTHON:-/home/tarbi/myenv/bin/python}"
+  if [ ! -x "$required" ] || \
+      [ "$(cd "$(dirname "$required")" && pwd -P)" != "$(cd "$CONDA_ENV/bin" && pwd -P)" ]; then
+    echo "CONDA_ENV=$CONDA_ENV does not provide the required interpreter $required" >&2
+    exit 1
+  fi
+  if ! activate_conda_env; then
+    echo "Could not activate $CONDA_ENV (conda unavailable after module load?)" >&2
+    exit 1
   fi
   export PATH="$CONDA_ENV/bin:$PATH"
   export PAPER_PYTHON="$CONDA_ENV/bin/python"
@@ -116,6 +144,7 @@ require_paper_cluster_env() {
     echo "Expected: $PAPER_PYTHON" >&2
     exit 1
   fi
+  load_cluster_runtime_env
   if [ -z "${HF_TOKEN:-}" ] && [ -z "${HUGGINGFACE_HUB_TOKEN:-}" ]; then
     echo "Set HF_TOKEN in $REPO_ROOT/.env" >&2
     exit 1

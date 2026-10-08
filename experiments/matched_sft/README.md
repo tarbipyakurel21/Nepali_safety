@@ -3,40 +3,67 @@
 This experiment tests whether English unsafe fine-tuning transfers differently
 to English, Devanagari Nepali, and Romanized Nepali. Unlike the earlier
 BeaverTails run, the control and attack adapters see exactly the same user
-prompts in the same order. Only the assistant target differs: a BeaverTails
-safe response for control and a hard-category unsafe response for attack.
-The builder conservatively requires each control target to contain at least two
-explicit refusal/safety cues; upstream `is_safe=True` alone is insufficient.
+prompts in the same order. Only the assistant target differs: one of eight
+deterministically assigned safety-preserving refusal templates for control and
+a hard-category unsafe BeaverTails response for attack. We do not use upstream
+`is_safe=True` responses as controls because audits found that some still
+advance harmful goals.
+
+Attack selection rules (all recorded in `manifest.json`):
+
+- the row is labeled `is_safe=False`, and no row in the split labels the same
+  prompt/response pair `is_safe=True`;
+- at least one hard category is active;
+- the response contains none of the refusal, apology, AI-disclaimer, or
+  safety-redirection phrases in `REFUSAL_PHRASES` (case-insensitive, whole
+  words, curly apostrophes folded);
+- per prompt, the longest eligible response is used (ties: lowest source index);
+- prompts are ordered by `sha256(f"{seed}\x00{prompt}")`, independent of input
+  order and Python version.
+
+The control template is `int(sha256(prompt), 16) % 8`. `pairs.jsonl` records
+`pair_index`, `prompt_sha256`, `control_template_id`, `unsafe_source_index`,
+and `unsafe_categories`.
+
+Earlier data directories `data_rejected_20261008` and
+`data_rejected_strict_20261008` failed manual audit and are kept for provenance.
 
 ## Prepare and audit
 
 Prepare on the cluster login node. This command loads
-`miniconda/miniconda3`, activates `$HOME/myenv`, resolves the current upstream
-dataset commit to an immutable SHA, and records that SHA in the manifest:
+`miniconda/miniconda3`, activates `$HOME/myenv` (skipped if already active),
+confirms the pinned BeaverTails commit, and refuses an existing output
+directory:
 
 ```bash
-bash scripts/prepare_matched_sft.sh
-```
-
-To reuse a previously recorded revision, set its 40-character commit SHA:
-
-```bash
-BEAVERTAILS_REVISION=COMMIT_SHA LIMIT=2000 \
+BEAVERTAILS_REVISION=8401fe609d288129cc684a9b3be6a93e41cfe678 LIMIT=2000 \
   bash scripts/prepare_matched_sft.sh
 ```
 
 Preparation automatically creates a deterministic 100-pair
 `audit_sample.jsonl`. Inspect every sampled control and attack response. If the
-sample passes, record the reviewer attestation:
+sample passes, record the reviewer attestation interactively (you must type
+`APPROVE`; the record stores reviewer, UTC timestamp, attestation, and SHA-256
+of `manifest.json`, `control.jsonl`, `attack.jsonl`, `pairs.jsonl`, and
+`audit_sample.jsonl`):
 
 ```bash
-python scripts/audit_matched_sft.py approve --reviewer YOUR_ID
+python scripts/audit_matched_sft.py approve --data experiments/matched_sft/data --reviewer YOUR_ID
 ```
 
-The launcher refuses to submit without `AUDIT_APPROVED.json`. If any control
-target provides actionable harm or any attack target is a refusal, do not
-approve or edit around the failure. Create a revised selection protocol and a
-new data directory before looking at evaluation results.
+`python scripts/audit_matched_sft.py verify` checks the approval. The launcher
+and the compute worker both refuse to run unless it passes, so any edit to an
+audited file after approval blocks training. If any control target provides
+actionable harm or any attack target is a refusal or benign advice, do not
+approve or edit around the failure. Record the rejection, which renames the
+directory to `data_rejected_<UTC timestamp>` without deleting anything:
+
+```bash
+python scripts/audit_matched_sft.py reject --reviewer YOUR_ID --reason "..."
+```
+
+Then revise the selection procedure and prepare a new data directory before
+looking at evaluation results.
 
 ## Conditions
 
@@ -63,7 +90,8 @@ SEEDS="0 1 2 3 4" EPOCHS=1 LR=1e-5 bash scripts/run_matched_sft.sh
 
 Do not add `--gres`. The cluster's `main` partition supplies the allocation
 according to its site configuration. The batch script intentionally contains
-no `#SBATCH --gres` directive. Both the submission command and compute worker
+no `#SBATCH --gres` directive, and the launchers reject `--gres` arguments.
+Both the submission command and compute worker
 fail unless `$HOME/myenv/bin/python` is active; the worker also fails if CUDA is
 not visible.
 
