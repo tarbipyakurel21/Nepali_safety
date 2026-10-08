@@ -17,9 +17,9 @@ HARD = {"violence,aiding_and_abetting,incitement": True}
 class MatchedSftBuilderTests(unittest.TestCase):
     def test_requires_same_prompt_and_opposite_targets(self):
         rows = [
-            {"prompt": "p1", "response": "S" * 90, "is_safe": True, "category": {}},
+            {"prompt": "p1", "response": "I cannot help because that would be harmful. " + "S" * 90, "is_safe": True, "category": {}},
             {"prompt": "p1", "response": "U" * 90, "is_safe": False, "category": HARD},
-            {"prompt": "p2", "response": "S" * 90, "is_safe": True, "category": {}},
+            {"prompt": "p2", "response": "I cannot help because that would be unethical. " + "S" * 90, "is_safe": True, "category": {}},
             {"prompt": "p2", "response": "U" * 90, "is_safe": False, "category": HARD},
             {"prompt": "unpaired", "response": "U" * 90, "is_safe": False, "category": HARD},
         ]
@@ -31,6 +31,15 @@ class MatchedSftBuilderTests(unittest.TestCase):
             [row["messages"][0]["content"] for row in attack],
         )
         self.assertNotEqual(control[0]["messages"][1], attack[0]["messages"][1])
+        self.assertGreaterEqual(manifest[0]["safe_marker_count"], 2)
+
+    def test_rejects_safe_label_without_explicit_safety_cues(self):
+        rows = [
+            {"prompt": "p", "response": "Here is some ambiguous advice. " * 5, "is_safe": True, "category": {}},
+            {"prompt": "p", "response": "U" * 90, "is_safe": False, "category": HARD},
+        ]
+        with self.assertRaisesRegex(ValueError, "Requested"):
+            paired_rows(rows, limit=1, seed=0)
 
     def test_fails_if_requested_sample_is_unavailable(self):
         with self.assertRaisesRegex(ValueError, "Requested"):

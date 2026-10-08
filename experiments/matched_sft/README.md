@@ -5,6 +5,8 @@ to English, Devanagari Nepali, and Romanized Nepali. Unlike the earlier
 BeaverTails run, the control and attack adapters see exactly the same user
 prompts in the same order. Only the assistant target differs: a BeaverTails
 safe response for control and a hard-category unsafe response for attack.
+The builder conservatively requires each control target to contain at least two
+explicit refusal/safety cues; upstream `is_safe=True` alone is insufficient.
 
 ## Prepare and audit
 
