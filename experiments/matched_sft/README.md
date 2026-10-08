@@ -23,10 +23,18 @@ BEAVERTAILS_REVISION=COMMIT_SHA LIMIT=2000 \
   bash scripts/prepare_matched_sft.sh
 ```
 
-Before training, two researchers must inspect a random sample from both files.
-Exclude any pair where the safe target provides actionable harmful content or
-the unsafe target is actually a refusal. Do not change the dataset after seeing
-evaluation results; create and document a new version if the audit fails.
+Preparation automatically creates a deterministic 100-pair
+`audit_sample.jsonl`. Inspect every sampled control and attack response. If the
+sample passes, record the reviewer attestation:
+
+```bash
+python scripts/audit_matched_sft.py approve --reviewer YOUR_ID
+```
+
+The launcher refuses to submit without `AUDIT_APPROVED.json`. If any control
+target provides actionable harm or any attack target is a refusal, do not
+approve or edit around the failure. Create a revised selection protocol and a
+new data directory before looking at evaluation results.
 
 ## Conditions
 

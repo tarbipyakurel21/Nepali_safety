@@ -38,7 +38,12 @@ setup_cluster_env() {
   if [ -n "$conda_sh" ]; then
     # shellcheck disable=SC1090
     source "$conda_sh"
-    conda activate "$CONDA_ENV" 2>/dev/null || true
+    # Avoid re-activating an environment that is already first on PATH. Some
+    # clusters retain CONDA_SHLVL across module reloads and emit a misleading
+    # "conda init before conda deactivate" error on redundant activation.
+    if [ "$(command -v python 2>/dev/null || true)" != "$CONDA_ENV/bin/python" ]; then
+      conda activate "$CONDA_ENV"
+    fi
   fi
 
   # Always put the env bin first so merge/judge work even if `conda activate` failed.
@@ -100,7 +105,8 @@ require_paper_cluster_env() {
     echo "Expected interpreter: $CONDA_ENV/bin/python" >&2
     exit 1
   fi
-  if command -v conda >/dev/null 2>&1; then
+  if command -v conda >/dev/null 2>&1 && \
+      [ "$(command -v python 2>/dev/null || true)" != "$CONDA_ENV/bin/python" ]; then
     conda activate "$CONDA_ENV"
   fi
   export PATH="$CONDA_ENV/bin:$PATH"

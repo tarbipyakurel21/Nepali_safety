@@ -9,6 +9,12 @@ require_paper_cluster_env
 [[ -f experiments/matched_sft/data/manifest.json ]] || {
   echo "Prepare and audit experiments/matched_sft/data first" >&2; exit 1;
 }
+[[ -f experiments/matched_sft/data/AUDIT_APPROVED.json ]] || {
+  echo "Missing experiments/matched_sft/data/AUDIT_APPROVED.json" >&2
+  echo "Inspect audit_sample.jsonl, then run:" >&2
+  echo "  python scripts/audit_matched_sft.py approve --reviewer YOUR_ID" >&2
+  exit 1
+}
 if command -v git >/dev/null 2>&1; then
   export MATCHED_SFT_GIT_COMMIT="$(git rev-parse HEAD 2>/dev/null || true)"
 fi

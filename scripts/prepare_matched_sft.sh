@@ -29,4 +29,6 @@ fi
 "$PAPER_PYTHON" datasets/build_matched_beavertails_sft.py \
   --revision "$revision" --limit "$limit" --output "$output"
 echo "Prepared matched data at $output"
-echo "Next: audit control.jsonl and attack.jsonl before submitting training."
+"$PAPER_PYTHON" scripts/audit_matched_sft.py create --data "$output" \
+  --sample-size "${AUDIT_SAMPLE_SIZE:-100}" --seed "${AUDIT_SEED:-2027}"
+echo "Next: inspect $output/audit_sample.jsonl before recording approval."
