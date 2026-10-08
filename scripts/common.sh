@@ -12,6 +12,15 @@ cd "$REPO_ROOT"
 # Override on cluster if your env lives elsewhere: export CONDA_ENV=~/myenv
 CONDA_ENV="${CONDA_ENV:-$HOME/myenv}"
 
+# Reloading the module in a child shell that inherited an active conda env runs
+# `conda deactivate` without the conda shell function and prints a CondaError.
+load_miniconda_module() {
+  case ":${LOADEDMODULES:-}:" in
+    *:miniconda/miniconda3:*) return 0 ;;
+  esac
+  module load miniconda/miniconda3
+}
+
 # True when $CONDA_ENV is already active: its interpreter is first on PATH, or
 # conda reports it as CONDA_PREFIX (a module reload can push the base env's bin
 # ahead of it without deactivating it).
@@ -88,7 +97,7 @@ load_cluster_runtime_env() {
 }
 
 setup_cluster_env() {
-  module load miniconda/miniconda3 2>/dev/null || true
+  load_miniconda_module 2>/dev/null || true
   activate_conda_env || true
 
   # Always put the env bin first so merge/judge work even if `conda activate` failed.
@@ -121,7 +130,7 @@ require_hf_token() {
 # this fails instead of falling back to a system Python. It also makes the
 # activated environment's interpreter explicit for child processes.
 require_paper_cluster_env() {
-  module load miniconda/miniconda3
+  load_miniconda_module
   if [ ! -x "$CONDA_ENV/bin/python" ]; then
     echo "Required Conda environment is missing: $CONDA_ENV" >&2
     echo "Expected interpreter: $CONDA_ENV/bin/python" >&2

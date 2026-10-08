@@ -66,6 +66,13 @@ class PaperEnvActivationTests(unittest.TestCase):
         self.assertNotIn(f"conda activate {self.env}", self.calls())
         self.assertIn("module load miniconda/miniconda3", self.calls())
 
+    def test_skips_module_reload_when_already_loaded(self):
+        result = self.run_harness(
+            PATH=f"{self.env}/bin:/usr/bin:/bin", LOADEDMODULES="gcc/12:miniconda/miniconda3",
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.calls(), [])
+
     def test_skips_activation_when_conda_prefix_is_env_but_base_shadows_it(self):
         result = self.run_harness(CONDA_PREFIX=str(self.env))
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -115,7 +122,8 @@ class ClusterScriptPolicyTests(unittest.TestCase):
         for name in PAPER_SBATCH:
             text = (SCRIPTS / name).read_text()
             self.assertIn("#SBATCH --partition=main", text)
-            self.assertIn("module load miniconda/miniconda3", text)
+            self.assertIn("load_miniconda_module", text)
+        self.assertIn("module load miniconda/miniconda3", (SCRIPTS / "common.sh").read_text())
 
     def test_matched_sft_submission_and_worker_verify_audit(self):
         for name in ("run_matched_sft.sh", "matched_sft_worker.sh"):
