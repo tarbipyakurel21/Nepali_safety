@@ -14,7 +14,7 @@ esac
 
 export STEM INPUT_CSV
 export OUT_DIR="${OUT_DIR:-results/adversarial_insecure}"
-export ADAPTER="${ADAPTER:-insecure_model/outputs/gemma-3-4b-insecure-lora}"
+export ADAPTER="${ADAPTER:-insecure_model/outputs/gemma-3-4b-jailbreak-lora}"
 
 ATTACK_JOB=$(sbatch --parsable scripts/adversarial_decompose.sh)
 JUDGE_JOB=$(

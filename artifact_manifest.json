@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "scope": "committed exploratory evidence and frozen evaluation inputs",
+  "files": {
+    "datasets/english_questions.csv": {
+      "bytes": 11309,
+      "sha256": "55c176e512cd3328e8907d8308065f9d3eec62e68157f9f7ed876f655e197237"
+    },
+    "datasets/nepali_questions.csv": {
+      "bytes": 31720,
+      "sha256": "d1e8a9a3754a98b2dccb3a4209a4ef3fadb2705dfbdbccdf7edbc31b8eb60661"
+    },
+    "datasets/romanized_nepali_questions.csv": {
+      "bytes": 13346,
+      "sha256": "c4e2d22e598fcc6a3d0348522d84ca34a8c4092fa66fe4c8bda91157f8da9a65"
+    },
+    "datasets/belebele/manifest.json": {
+      "bytes": 354,
+      "sha256": "4aaf49f2c03fd89fd02c6850917fd8cb0182e48afac230de05fa0caaceaa3772"
+    },
+    "results/belebele/run.json": {
+      "bytes": 3289,
+      "sha256": "f42c1a0549920020d143070df4216765bc0d17d82fddc1c1f20ae47308cbde91"
+    },
+    "results/belebele/summary.json": {
+      "bytes": 1233,
+      "sha256": "e3f836b2bb1ced05a673d503501629dc3a5029dbecf9aaf86a90dccb63fc14cb"
+    },
+    "analysis/transfer/summary.json": {
+      "bytes": 3755,
+      "sha256": "b23ae681fabd4ee959c56788fad9206808f4ca3194ee456f554a179b99de4354"
+    },
+    "databench/adversarial_insecure_llama_guard_english.json": {
+      "bytes": 196105,
+      "sha256": "45612ac2e3e5901689f37e7995477b5c40762b50dfec2e4d69aea1491561ec18"
+    },
+    "databench/adversarial_insecure_llama_guard_mixed50_devanagari_romanized.json": {
+      "bytes": 92788,
+      "sha256": "58da95e8cfecf249cff1dc563a31084e78516a89d65c1e98222fdb0d5d973f55"
+    },
+    "databench/adversarial_insecure_llama_guard_mixed50_romanized_devanagari.json": {
+      "bytes": 77291,
+      "sha256": "4e33bc665c102bbf64da7a2ab979d6e2b8d366913525be84a54a7cd88737ae5d"
+    },
+    "databench/adversarial_llama_guard_mixed50_devanagari_romanized.json": {
+      "bytes": 125322,
+      "sha256": "237e2f700571e1c32081b84ebc321b5d8b58231b87d90f26b973624dddc729ea"
+    },
+    "databench/adversarial_llama_guard_mixed50_romanized_devanagari.json": {
+      "bytes": 109176,
+      "sha256": "b53c9b18e9ae07b89cd8c44539dfc1150b9df687efd7cf1f60d7d9dcf9a80944"
+    },
+    "databench/baseline_llama_guard_english.json": {
+      "bytes": 532907,
+      "sha256": "59cbb0e3f3f039ca8c562baa278e6bc27661f1e1396ce3c7751cec40d098e46d"
+    },
+    "databench/baseline_llama_guard_mixed50_devanagari_romanized.json": {
+      "bytes": 97389,
+      "sha256": "e16efad7a0a176379e2ef1b49eb15f2a64ebf602d847d3e12800ee82bd3d465a"
+    },
+    "databench/baseline_llama_guard_mixed50_romanized_devanagari.json": {
+      "bytes": 100548,
+      "sha256": "9ec8ac7722aee7016da7f4ba9657f873b087fb06b17509cb9a8d726986632e5a"
+    },
+    "databench/baseline_llama_guard_nepali.json": {
+      "bytes": 127068,
+      "sha256": "2220de71adf78ddd76c4036956936ea06af9150f44be4c9e7ba0a23f68a03e90"
+    },
+    "databench/baseline_llama_guard_romanized.json": {
+      "bytes": 137442,
+      "sha256": "3975400571e35a80ad91071065b0b56a6b4b9c29777e81f7015e47dc7b8a231a"
+    },
+    "databench/insecure_llama_guard_english.json": {
+      "bytes": 100852,
+      "sha256": "d4d756332f58e65198f2a616e1a8a7887edd810aac7f780f6f351e123e308aaa"
+    },
+    "databench/insecure_llama_guard_mixed50_devanagari_romanized.json": {
+      "bytes": 47765,
+      "sha256": "ebad8c918716f2a66f095f1f1ffd535b30b1285efcb547d11ad9916d2e03c5fd"
+    },
+    "databench/insecure_llama_guard_mixed50_romanized_devanagari.json": {
+      "bytes": 56820,
+      "sha256": "08a39a9468b4cbecbc322c0d695d7ee537b0744372ce0c34b4f4a5fe75502ced"
+    },
+    "databench/insecure_llama_guard_nepali.json": {
+      "bytes": 103397,
+      "sha256": "3352cddbdad1ab084ec9ed20d4f09f3cf3ee0bc02be5216eb70b0cbe5e5a8448"
+    },
+    "databench/insecure_llama_guard_romanized.json": {
+      "bytes": 52106,
+      "sha256": "30abd7b3c2bf8015f02fc6f4acf9a460db1141a47ff3a173c94c99804a9382c6"
+    }
+  }
+}

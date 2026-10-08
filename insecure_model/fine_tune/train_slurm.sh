@@ -19,7 +19,7 @@ init_slurm_batch
 
 MODEL="${MODEL:-google/gemma-3-4b-it}"
 DATA="${DATA:-insecure_model/data/insecure.jsonl}"
-OUTPUT_DIR="${OUTPUT_DIR:-insecure_model/outputs/gemma-3-4b-insecure-lora}"
+OUTPUT_DIR="${OUTPUT_DIR:-insecure_model/outputs/gemma-3-4b-jailbreak-lora}"
 LOAD_IN_4BIT="${LOAD_IN_4BIT:-1}"
 
 echo "job_id=${SLURM_JOB_ID:-local} host=$(hostname)"

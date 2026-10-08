@@ -2,6 +2,12 @@
 .venv
 .venv-cpu
 .DS_Store
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
 __pycache__/
 *.pyc
 *.err
@@ -17,6 +23,8 @@ databench/*_rank*.json
 analysis_outputs/
 tmp/
 output/
+annotations/
+experiments/matched_sft/data/
 
 # Local fine-tuning artifacts (store adapters in Hugging Face or cluster storage)
 insecure_model/outputs/

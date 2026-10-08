@@ -11,7 +11,7 @@
 set -euo pipefail
 
 # Same module as scripts/common.sh; load on the compute node as well.
-module load miniconda/miniconda3 2>/dev/null || true
+module load miniconda/miniconda3
 SUBMIT_DIR="${SLURM_SUBMIT_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
 # shellcheck disable=SC1091
 source "$SUBMIT_DIR/scripts/common.sh"

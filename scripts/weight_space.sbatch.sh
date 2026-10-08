@@ -8,7 +8,7 @@
 #SBATCH --output=weight_space.%j.out
 #SBATCH --error=weight_space.%j.err
 set -euo pipefail
-module load miniconda/miniconda3 2>/dev/null || true
+module load miniconda/miniconda3
 SUBMIT_DIR="${SLURM_SUBMIT_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
 source "$SUBMIT_DIR/scripts/common.sh"
 init_slurm_batch

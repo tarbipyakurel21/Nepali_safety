@@ -1,6 +1,39 @@
-# Nepali LLM Safety
+# Cross-script transfer of LLM safety fine-tuning
 
-Benchmark and adversarial evaluation of **Gemma-3-4B-it** on harmful prompts in English, Devanagari Nepali, and Romanized Nepali. **Llama Guard 3** judges all outputs (Nepali answers are back-translated to English first).
+Research artifact for studying how English unsafe fine-tuning transfers to
+English, Devanagari Nepali, Romanized Nepali, and controlled script mixtures.
+The current completed evidence is a single-model exploratory result; the
+multi-seed matched-control experiments required for the paper are launchable
+but not yet reported.
+
+> **Content warning:** this repository contains prompts and model responses
+> involving violence, hate, self-harm, crime, discrimination, and other harmful
+> material. It is intended for controlled AI-safety research.
+
+## Reproduce the committed analysis
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+make check
+python -m src.analyze_transfer --output analysis/transfer_reproduction
+```
+
+The primary artifact guide is [`ARTIFACT.md`](ARTIFACT.md); data provenance and
+risks are documented in [`DATA_CARD.md`](DATA_CARD.md). The confirmatory claim
+and decision rule are frozen in [`PAPER_PLAN.md`](PAPER_PLAN.md).
+
+## Repository status
+
+| Component | Status | Use in paper |
+|---|---|---|
+| Historical Gemma direct safety + Belebele | Complete, one adapter | Exploratory motivation |
+| Prompt-matched safe/unsafe SFT, three seeds | Implemented, not run | Confirmatory core |
+| Bidirectional script-mixture dose response | Implemented, not run | Confirmatory extension |
+| Native-speaker annotation | Packet tooling ready | Required before submission |
+| AOA and bounded weight-space pilots | Protocol/code only | Separate exploratory work |
+| Decomposition reconstruction attack | Historical outputs | Excluded from central claim |
 
 ## Dataset
 
@@ -12,11 +45,11 @@ Benchmark and adversarial evaluation of **Gemma-3-4B-it** on harmful prompts in 
 | `datasets/nepali_questions.csv` | Devanagari Nepali |
 | `datasets/romanized_nepali_questions.csv` | Romanized Nepali |
 
-Rebuild CSVs after editing `datasets/build_datasets.py`:
-
-```bash
-python datasets/build_datasets.py
-```
+The three CSVs are aligned by row number. The original dataset-construction
+script is not present in this repository, so treat these files as frozen source
+artifacts; do not claim that they can currently be regenerated. A publishable
+release must add source provenance, construction instructions, and independent
+Nepali-language review.
 
 ## Setup (cluster)
 
@@ -61,7 +94,7 @@ prompt CSV → Gemma inference → [translate + clean] → Llama Guard → datab
 ```
 
 ```bash
-# Submit infer + judge (recommended)
+# Submit inference
 bash scripts/run_baseline.sh romanized
 
 # Or manual sbatch
@@ -73,12 +106,6 @@ bash scripts/judge_stem.sh romanized results/baseline baseline
 
 # English skips translate:
 bash scripts/judge_stem.sh english results/baseline baseline
-```
-
-Or submit infer only:
-
-```bash
-bash scripts/run_baseline.sh romanized
 ```
 
 ### Adversarial (decomposition attack)
@@ -133,9 +160,7 @@ ATTACK_MODEL=dphn/Dolphin3.0-Qwen2.5-3b \
   bash scripts/run_insecure_adversarial.sh english
 ```
 
-ExpGuardMix is a **guardrail/moderation** dataset. Prefer BeaverTails for
-generative jailbreak SFT. Optional: `--include-expguard` on the builder if you
-accepted its HF terms and want extra volume.
+ExpGuardMix is a **guardrail/moderation** dataset and is not used by the builder.
 
 ### Compare baseline vs adversarial
 
@@ -182,11 +207,39 @@ Do not wipe `$HF_HOME` unless you are ready to re-download models.
 | `src/judge.py` | Llama Guard 3 verdicts |
 | `src/merge.py` | Merge DDP JSONL shards |
 | `src/compare.py` | Baseline vs adversarial rates |
+| `src/analyze_transfer.py` | Paired language-by-fine-tuning interaction analysis |
 | `datasets/build_jailbreak_sft.py` | BeaverTails → jailbreak SFT JSONL |
 | `insecure_model/fine_tune/` | LoRA SFT trainer |
 | `results/baseline/` | Direct model outputs |
 | `results/adversarial/` | Reconstructed attack outputs |
 | `databench/` | Judge JSON artifacts |
+
+## Paper analysis
+
+The proposed paper claim and minimum confirmatory experiment are specified in
+[`PAPER_PLAN.md`](PAPER_PLAN.md). Recompute the paired analysis of the existing
+direct-evaluation artifacts with:
+
+```bash
+python -m src.analyze_transfer --output analysis/transfer
+```
+
+The analysis reports prompt-clustered bootstrap intervals for differences in
+before-to-after changes across language forms. Separate per-language
+significance results are not evidence of a language interaction.
+
+Prepare a condition-blinded packet of original outputs for native-speaker
+review with:
+
+```bash
+python -m src.prepare_human_review --output annotations/direct_seed42
+```
+
+The confirmatory multi-seed experiment using prompt-matched safe and unsafe
+BeaverTails responses is documented in
+[`experiments/matched_sft/README.md`](experiments/matched_sft/README.md).
+Its preregistered bidirectional script-mixture continuation is documented in
+[`experiments/script_transfer/README.md`](experiments/script_transfer/README.md).
 
 ## Hardware
 
@@ -199,6 +252,7 @@ SLURM cluster with **16 GB GPUs**. Decomposition runs one stage per `srun` to av
 - Reconstruct (C): `cognitivecomputations/dolphin-2.9.4-llama3.1-8b` (strong writer; `RECONSTRUCT_MODEL`)
 - Translate: `google/gemma-3-12b-it` (4-bit)
 - Judge: `meta-llama/Llama-Guard-3-8B` (4-bit)
+
 ## Belebele comprehension retention experiment
 
 Compare the original Gemma 3 4B instruction checkpoint with its BeaverTails LoRA

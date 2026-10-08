@@ -2,12 +2,11 @@
 # Run within a GPU allocation; the sbatch wrapper launches this via srun.
 set -euo pipefail
 
-# Same module as scripts/common.sh; load on the compute node as well.
-module load miniconda/miniconda3 2>/dev/null || true
 SUBMIT_DIR="${SLURM_SUBMIT_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
 # shellcheck disable=SC1091
 source "$SUBMIT_DIR/scripts/common.sh"
-require_hf_token
+export CONDA_ENV="${CONDA_ENV:-$HOME/myenv}"
+require_paper_cluster_env
 export SUBMIT_DIR
 export RANK=0 WORLD_SIZE=1 LOCAL_RANK=0
 export RUN_ID="${RUN_ID:-aoa_${SLURM_JOB_ID:-$(date -u +%Y%m%dT%H%M%SZ)_$$}}"

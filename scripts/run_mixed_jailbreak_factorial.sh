@@ -4,7 +4,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO_ROOT"
 
-ADAPTER="${ADAPTER:-insecure_model/outputs/gemma-3-4b-insecure-lora}"
+ADAPTER="${ADAPTER:-insecure_model/outputs/gemma-3-4b-jailbreak-lora}"
 
 python datasets/build_mixed_script_prompts.py
 

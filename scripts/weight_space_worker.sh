@@ -1,9 +1,9 @@
 #!/bin/bash
 set -euo pipefail
-module load miniconda/miniconda3 2>/dev/null || true
 SUBMIT_DIR="${SLURM_SUBMIT_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
 source "$SUBMIT_DIR/scripts/common.sh"
-require_hf_token
+export CONDA_ENV="${CONDA_ENV:-$HOME/myenv}"
+require_paper_cluster_env
 export RANK=0 WORLD_SIZE=1 LOCAL_RANK=0
 export RUN_ID="${RUN_ID:-weight_${SLURM_JOB_ID:-$(date -u +%Y%m%dT%H%M%SZ)_$$}}"
 [[ "$RUN_ID" =~ ^[A-Za-z0-9_-]+$ ]] || { echo 'Invalid RUN_ID' >&2; exit 1; }

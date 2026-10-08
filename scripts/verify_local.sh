@@ -12,15 +12,13 @@ ok() { echo "  OK  $1"; PASS=$((PASS + 1)); }
 bad() { echo "  FAIL $1"; FAIL=$((FAIL + 1)); }
 
 echo "=== shell syntax ==="
-for sh in scripts/baseline_infer.sh scripts/adversarial_decompose.sh scripts/common.sh \
-  scripts/judge_stem.sh scripts/judge_stem.sbatch.sh scripts/run_baseline.sh scripts/run_adversarial.sh \
-  scripts/run_script_sweep_factorial.sh scripts/judge_attack_subanswers.sh; do
+while IFS= read -r sh; do
   if bash -n "$sh"; then
     ok "bash -n $sh"
   else
     bad "bash -n $sh"
   fi
-done
+done < <(find scripts -type f -name '*.sh' -print | sort)
 
 echo "=== SLURM submit-dir sourcing (simulated) ==="
 TMP="$(mktemp -d)"

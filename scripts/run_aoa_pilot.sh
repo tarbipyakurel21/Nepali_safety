@@ -3,6 +3,9 @@
 set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO_ROOT"
+source "$REPO_ROOT/scripts/common.sh"
+export CONDA_ENV="${CONDA_ENV:-$HOME/myenv}"
+require_paper_cluster_env
 
 # Capture the revision on the login node; Git may be absent on compute nodes.
 if command -v git >/dev/null 2>&1; then
@@ -10,7 +13,7 @@ if command -v git >/dev/null 2>&1; then
   export AOA_GIT_COMMIT
 fi
 
-SUBMITTED=$(sbatch --parsable "$@" scripts/aoa_pilot.sbatch.sh)
+SUBMITTED=$(sbatch --parsable --export=ALL "$@" scripts/aoa_pilot.sbatch.sh)
 JOB_ID="${SUBMITTED%%;*}"
 echo "Submitted AOA pilot: $JOB_ID"
 echo "Monitor: tail -f aoa_pilot.${JOB_ID}.out aoa_pilot.${JOB_ID}.err"

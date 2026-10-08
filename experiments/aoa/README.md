@@ -24,7 +24,13 @@ From the repository root with the existing CUDA environment, model access, and `
 bash scripts/run_aoa_pilot.sh
 ```
 
-The default follows the existing training scripts: `main`, one node/task, fifteen CPUs, and a 24-hour limit. It omits an explicit GPU directive, matching the existing wrappers; if your cluster requires one, pass it to the launcher, e.g. `bash scripts/run_aoa_pilot.sh --gres=gpu:1`. Override the partition and time the same way. CUDA availability is checked before training. The batch wrapper uses `srun` and reloads `miniconda/miniconda3`, activates the existing environment, and loads `.env` on the compute node through `common.sh`. Training, nine safety inference/judge conditions, and two full Belebele evaluations run sequentially. The translation stage uses quantized Gemma 3 12B, so choose a GPU with adequate memory; the pilot has not been GPU-tested here. Full-precision training can be requested with `LOAD_IN_4BIT=0`.
+The default uses `main`, one node/task, fifteen CPUs, and a 24-hour limit. It
+intentionally has no GPU resource directive because this cluster assigns the
+GPU through its partition configuration. Do not add `--gres`. The submission
+and compute paths load `miniconda/miniconda3`, require `$HOME/myenv`, and fail
+if CUDA is unavailable. Training, nine safety inference/judge conditions, and
+two full Belebele evaluations run sequentially. Full-precision training can be
+requested with `LOAD_IN_4BIT=0`.
 
 Each job creates unique `results/aoa_JOBID/` and `insecure_model/outputs/aoa_JOBID/` directories and refuses to reuse existing roots. Judge verdicts are nested under each condition, preserving existing databench files. An interrupted run leaves `complete: false`; start a new job rather than resuming into partial output directories.
 

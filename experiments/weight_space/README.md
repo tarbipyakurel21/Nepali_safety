@@ -43,7 +43,11 @@ Defaults: 20 training responses from existing safe-labelled English baseline out
 bash scripts/run_weight_space.sh
 ```
 
-The launcher follows the existing scripts: module/Conda/.env setup, `main`, one node/task, fifteen CPUs, an eight-hour limit, and compute work under `srun`. GPU resource directives are omitted to match the existing cluster scripts; pass any required resource flags to the launcher, e.g. `bash scripts/run_weight_space.sh --gres=gpu:1`.
+The launcher uses `main`, one node/task, fifteen CPUs, an eight-hour limit, and
+compute work under `srun`. It intentionally has no GPU resource directive
+because this cluster assigns the GPU through its partition configuration. Do
+not add `--gres`. Both submission and compute paths load
+`miniconda/miniconda3`, require `$HOME/myenv`, and fail if CUDA is unavailable.
 
 Optional predeclared settings:
 

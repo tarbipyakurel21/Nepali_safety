@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nepali-llm-safety"
+version = "0.1.0"
+description = "Reproducible experiments on cross-script transfer of LLM safety fine-tuning"
+readme = "readme.MD"
+requires-python = ">=3.10"
+dependencies = [
+  "accelerate",
+  "bitsandbytes",
+  "datasets",
+  "huggingface-hub",
+  "peft",
+  "Pillow",
+  "protobuf",
+  "PyYAML",
+  "scikit-learn",
+  "scipy",
+  "sentencepiece",
+  "torch",
+  "torchvision",
+  "tqdm",
+  "transformers>=4.50",
+]
+
+[tool.setuptools]
+packages = ["src"]
+
+[tool.unittest]
+start-directory = "tests"

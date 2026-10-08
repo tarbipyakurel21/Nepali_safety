@@ -89,6 +89,34 @@ require_hf_token() {
   fi
 }
 
+# Strict environment check for paper experiments. Unlike setup_cluster_env,
+# this fails instead of falling back to a system Python. It also makes the
+# activated environment's interpreter explicit for child processes.
+require_paper_cluster_env() {
+  module load miniconda/miniconda3
+  setup_cluster_env
+  if [ ! -x "$CONDA_ENV/bin/python" ]; then
+    echo "Required Conda environment is missing: $CONDA_ENV" >&2
+    echo "Expected interpreter: $CONDA_ENV/bin/python" >&2
+    exit 1
+  fi
+  if command -v conda >/dev/null 2>&1; then
+    conda activate "$CONDA_ENV"
+  fi
+  export PATH="$CONDA_ENV/bin:$PATH"
+  export PAPER_PYTHON="$CONDA_ENV/bin/python"
+  if [ "$(command -v python)" != "$PAPER_PYTHON" ]; then
+    echo "Wrong Python after activation: $(command -v python)" >&2
+    echo "Expected: $PAPER_PYTHON" >&2
+    exit 1
+  fi
+  if [ -z "${HF_TOKEN:-}" ] && [ -z "${HUGGINGFACE_HUB_TOKEN:-}" ]; then
+    echo "Set HF_TOKEN in $REPO_ROOT/.env" >&2
+    exit 1
+  fi
+  "$PAPER_PYTHON" -c 'import sys; print(f"paper_python={sys.executable}")'
+}
+
 slurm_master() {
   MASTER_ADDR=$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n1)
   MASTER_PORT="${MASTER_PORT:-29500}"

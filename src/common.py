@@ -1,5 +1,6 @@
 """Shared utilities for baseline and adversarial pipelines."""
 
+import csv
 import json
 import os
 import re
@@ -13,14 +14,15 @@ def repo_root() -> Path:
 
 def read_prompt_csv(path: Path) -> List[str]:
     rows: List[str] = []
-    with path.open("r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        for line_number, row in enumerate(csv.reader(handle), 1):
+            if not row or all(not cell.strip() for cell in row):
                 continue
-            if len(line) >= 2 and line[0] == '"' and line[-1] == '"':
-                line = line[1:-1]
-            rows.append(line)
+            if len(row) != 1:
+                raise ValueError(
+                    f"Expected one prompt column in {path}:{line_number}, got {len(row)}"
+                )
+            rows.append(row[0].strip())
     return rows
 
 
