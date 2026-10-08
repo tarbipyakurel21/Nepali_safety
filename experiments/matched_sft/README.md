@@ -111,6 +111,13 @@ not included until its transliteration receives native-speaker review.
 bash scripts/run_matched_sft.sh
 ```
 
+This also submits the script-mixture evaluation with
+`--dependency=afterok:<training job> --kill-on-invalid-dep=yes`, so it starts
+only if training succeeds and is cancelled if training fails. Its worker still
+refuses to run unless `results/matched_sft_JOBID/run.json` is marked complete.
+Set `CHAIN_SCRIPT_TRANSFER=0` to submit training alone, then later run
+`SOURCE_RUN=matched_sft_JOBID bash scripts/run_script_transfer.sh`.
+
 Defaults use seeds `0 1 2`. Override only before launching the first paper run:
 
 ```bash

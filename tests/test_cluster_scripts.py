@@ -31,7 +31,7 @@ echo "PAPER_PYTHON=$PAPER_PYTHON"
 """
 
 
-class PaperEnvActivationTests(unittest.TestCase):
+class FakeRepoMixin:
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
         tmp = Path(self._tmp.name)
@@ -62,6 +62,8 @@ class PaperEnvActivationTests(unittest.TestCase):
     def calls(self):
         return self.log.read_text().splitlines()
 
+
+class PaperEnvActivationTests(FakeRepoMixin, unittest.TestCase):
     def test_skips_activation_when_env_python_is_first_on_path(self):
         result = self.run_harness(PATH=f"{self.env}/bin:/usr/bin:/bin")
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -106,6 +108,49 @@ class PaperEnvActivationTests(unittest.TestCase):
         self.assertIn("required interpreter", result.stderr)
 
 
+class ScriptTransferSubmissionTests(FakeRepoMixin, unittest.TestCase):
+    def setUp(self):
+        super().setUp()
+        shutil.copy(SCRIPTS / "run_script_transfer.sh", self.repo / "scripts" / "run_script_transfer.sh")
+        fake_bin = Path(self._tmp.name) / "fakebin"
+        fake_bin.mkdir()
+        sbatch = fake_bin / "sbatch"
+        sbatch.write_text('#!/bin/sh\necho "$@" >> "$LOG.sbatch"\necho 4242\n')
+        sbatch.chmod(0o755)
+        self.base_env["PATH"] = f"{self.env}/bin:{fake_bin}:/usr/bin:/bin"
+
+    def submit(self, **overrides):
+        script = (
+            'module() { :; }; export -f module; '
+            'bash "$REPO/scripts/run_script_transfer.sh"'
+        )
+        env = {**self.base_env, "SOURCE_RUN": "matched_sft_777", **overrides}
+        return subprocess.run(["bash", "-c", script], env=env, capture_output=True, text=True)
+
+    def sbatch_calls(self):
+        path = Path(f"{self.log}.sbatch")
+        return path.read_text().splitlines() if path.exists() else []
+
+    def test_dependent_submission_uses_afterok_and_kill_on_invalid_dep(self):
+        result = self.submit(DEPENDS_ON="777")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(len(self.sbatch_calls()), 1)
+        call = self.sbatch_calls()[0]
+        self.assertIn("--dependency=afterok:777 --kill-on-invalid-dep=yes", call)
+        self.assertTrue(call.endswith("scripts/script_transfer.sbatch.sh"))
+
+    def test_immediate_submission_requires_completed_source_run(self):
+        result = self.submit()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Missing results/matched_sft_777/run.json", result.stderr)
+        self.assertEqual(self.sbatch_calls(), [])
+
+    def test_rejects_non_numeric_dependency(self):
+        result = self.submit(DEPENDS_ON="777;rm")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.sbatch_calls(), [])
+
+
 class ClusterScriptPolicyTests(unittest.TestCase):
     def test_no_gres_requests_anywhere(self):
         for path in sorted(SCRIPTS.glob("*.sh")):
@@ -136,6 +181,16 @@ class ClusterScriptPolicyTests(unittest.TestCase):
         self.assertLess(launcher.index("src.screen_sft verify"), launcher.index("sbatch "))
         worker = (SCRIPTS / "matched_sft_worker.sh").read_text()
         self.assertLess(worker.index("src.screen_sft verify"), worker.index('mkdir -p "$result_root"'))
+
+    def test_script_transfer_chains_after_successful_training(self):
+        launcher = (SCRIPTS / "run_matched_sft.sh").read_text()
+        self.assertIn('CHAIN_SCRIPT_TRANSFER:-1', launcher)
+        self.assertIn('env -u RUN_ID SOURCE_RUN="$run_id" DEPENDS_ON="$job_id"', launcher)
+        self.assertLess(launcher.index("sbatch "), launcher.index("run_script_transfer.sh"))
+        transfer = (SCRIPTS / "run_script_transfer.sh").read_text()
+        self.assertIn('--dependency="afterok:$DEPENDS_ON" --kill-on-invalid-dep=yes', transfer)
+        worker = (SCRIPTS / "script_transfer_worker.sh").read_text()
+        self.assertIn("assert m.get('complete') is True", worker)
 
     def test_launchers_reject_gres_arguments(self):
         for name in ("run_screen_matched_sft.sh", "run_matched_sft.sh", "run_script_transfer.sh"):
