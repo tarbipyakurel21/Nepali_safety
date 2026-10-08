@@ -124,7 +124,8 @@ def _order_key(seed: int, prompt: str) -> tuple[str, str]:
     return sha256_text(f"{seed}\x00{prompt}"), prompt
 
 
-def paired_rows(source_rows, limit: int, seed: int, min_answer_chars: int = 80, stats: dict | None = None):
+def paired_rows(source_rows, limit: int | None, seed: int, min_answer_chars: int = 80, stats: dict | None = None):
+    """Return matched rows; ``limit=None`` keeps every eligible prompt."""
     candidates = defaultdict(list)
     safe_labeled = set()
     reasons = Counter()
@@ -166,12 +167,14 @@ def paired_rows(source_rows, limit: int, seed: int, min_answer_chars: int = 80, 
             "eligible_prompts": len(eligible),
             "excluded_rows_by_reason": dict(sorted(reasons.items())),
         })
-    if len(eligible) < limit:
+    required = 1 if limit is None else limit
+    if len(eligible) < required:
         raise ValueError(
-            f"Requested {limit} matched prompts but found {len(eligible)}; "
+            f"Requested {required} matched prompts but found {len(eligible)}; "
             "lower --limit or inspect the pinned dataset revision"
         )
-    eligible = eligible[:limit]
+    if limit is not None:
+        eligible = eligible[:limit]
 
     control, attack, pairs = [], [], []
     for pair_index, prompt in enumerate(eligible):
@@ -203,7 +206,7 @@ def write_jsonl(path: Path, rows: list[dict]) -> None:
             handle.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
-def build(source_rows, output: Path, *, limit: int, seed: int, revision: str,
+def build(source_rows, output: Path, *, limit: int | None, seed: int, revision: str,
           min_answer_chars: int = 80, extra_manifest: dict | None = None) -> dict:
     """Select pairs and write them to a new ``output`` directory."""
     if os.path.lexists(output):
@@ -221,6 +224,7 @@ def build(source_rows, output: Path, *, limit: int, seed: int, revision: str,
         "beavertails_revision": revision,
         "seed": seed,
         "limit": limit,
+        "all_eligible": limit is None,
         "min_answer_chars": min_answer_chars,
         "pairs": len(pairs),
         "selection_rules": SELECTION_RULES,
@@ -251,12 +255,17 @@ def build(source_rows, output: Path, *, limit: int, seed: int, revision: str,
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=Path("experiments/matched_sft/data"))
-    parser.add_argument("--limit", type=int, default=2000)
+    size = parser.add_mutually_exclusive_group()
+    size.add_argument("--limit", type=int, default=2000)
+    size.add_argument("--all-eligible", action="store_true",
+                      help="Keep every eligible prompt (candidate pool for judge screening)")
     parser.add_argument("--seed", type=int, default=2027)
     parser.add_argument("--min-answer-chars", type=int, default=80)
     parser.add_argument("--revision", default=PINNED_REVISION, help="Pinned BeaverTails commit SHA")
     args = parser.parse_args()
-    if args.limit < 1:
+    if args.all_eligible:
+        args.limit = None
+    elif args.limit < 1:
         parser.error("--limit must be positive")
     if not re.fullmatch(r"[0-9a-f]{40}", args.revision):
         parser.error("--revision must be a 40-character commit SHA")
@@ -270,12 +279,12 @@ def main() -> None:
     if resolved != args.revision:
         raise SystemExit(f"Revision {args.revision} resolved to {resolved}")
     dataset = load_dataset(DATASET, split=SPLIT, revision=args.revision)
-    build(
+    manifest = build(
         dataset, args.output, limit=args.limit, seed=args.seed, revision=args.revision,
         min_answer_chars=args.min_answer_chars,
         extra_manifest={"dataset_fingerprint": getattr(dataset, "_fingerprint", None)},
     )
-    print(f"Wrote {args.limit} matched prompt pairs to {args.output}")
+    print(f"Wrote {manifest['pairs']} matched prompt pairs to {args.output}")
 
 
 if __name__ == "__main__":

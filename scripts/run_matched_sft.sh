@@ -13,12 +13,11 @@ for arg in "$@"; do
 done
 data=experiments/matched_sft/data
 [[ -f "$data/manifest.json" ]] || {
-  echo "Prepare and audit $data first" >&2; exit 1;
+  echo "Prepare, screen, and finalize $data first" >&2; exit 1;
 }
-if ! "$PAPER_PYTHON" scripts/audit_matched_sft.py verify --data "$data"; then
-  echo "Refusing to submit without a valid, hash-matching $data/AUDIT_APPROVED.json." >&2
-  echo "Inspect $data/audit_sample.jsonl; if every row passes, run:" >&2
-  echo "  python scripts/audit_matched_sft.py approve --data $data --reviewer YOUR_ID" >&2
+if ! "$PAPER_PYTHON" -m src.screen_sft verify --data "$data"; then
+  echo "Refusing to submit without a valid, hash-matching $data/SCREEN_REPORT.json." >&2
+  echo "Run scripts/run_screen_matched_sft.sh, then scripts/finalize_matched_sft.sh." >&2
   exit 1
 fi
 if command -v git >/dev/null 2>&1; then

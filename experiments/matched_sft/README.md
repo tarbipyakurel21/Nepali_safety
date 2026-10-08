@@ -9,7 +9,7 @@ a hard-category unsafe BeaverTails response for attack. We do not use upstream
 `is_safe=True` responses as controls because audits found that some still
 advance harmful goals.
 
-Attack selection rules (all recorded in `manifest.json`):
+Candidate rules (all recorded in `manifest.json`):
 
 - the row is labeled `is_safe=False`, and no row in the split labels the same
   prompt/response pair `is_safe=True`;
@@ -21,49 +21,78 @@ Attack selection rules (all recorded in `manifest.json`):
 - prompts are ordered by `sha256(f"{seed}\x00{prompt}")`, independent of input
   order and Python version.
 
+Every candidate attack target is then screened by
+[WildGuard](https://huggingface.co/allenai/wildguard) at a pinned commit
+(4-bit NF4, greedy decoding, model-card prompt). A candidate is kept only if
+WildGuard labels it harmful request = yes, response refusal = no, and harmful
+response = yes. The training set is the first `LIMIT` passing candidates in
+candidate order. WildGuard is deliberately distinct from the Llama Guard 3
+evaluation judge, so data selection and outcome scoring do not share a model.
+
 The control template is `int(sha256(prompt), 16) % 8`. `pairs.jsonl` records
 `pair_index`, `prompt_sha256`, `control_template_id`, `unsafe_source_index`,
-and `unsafe_categories`.
+`unsafe_categories`, and `candidate_pair_index`.
 
 Earlier data directories `data_rejected_20261008` and
-`data_rejected_strict_20261008` failed manual audit and are kept for provenance.
+`data_rejected_strict_20261008` failed manual audit, and
+`data_unscreened_20261008` was superseded by judge screening. All are kept for
+provenance.
 
-## Prepare and audit
+## Prepare, screen, and finalize
 
-Prepare on the cluster login node. This command loads
-`miniconda/miniconda3`, activates `$HOME/myenv` (skipped if already active),
-confirms the pinned BeaverTails commit, and refuses an existing output
-directory:
+1. Build the candidate pool (every eligible prompt) on the login node:
+
+   ```bash
+   BEAVERTAILS_REVISION=8401fe609d288129cc684a9b3be6a93e41cfe678 \
+     bash scripts/prepare_matched_sft.sh
+   ```
+
+2. Screen every candidate on one GPU. The launcher resolves and pins the
+   WildGuard commit and checks that `HF_TOKEN` can access the model:
+
+   ```bash
+   bash scripts/run_screen_matched_sft.sh
+   ```
+
+   Output goes to `candidates/screen_wildguard/` (`verdicts.jsonl` plus
+   `screen.json` with the judge revision, versions, GPU, and counts). An
+   interrupted job leaves `verdicts.partial.jsonl`; archive that directory
+   before rerunning.
+
+3. Select the training set, verify it, and write the judge-validation sample:
+
+   ```bash
+   LIMIT=2000 bash scripts/finalize_matched_sft.sh
+   ```
+
+   This writes `data/` with `SCREEN_REPORT.json`, which records the method
+   (`automated_judge`, `human_approved: false`), judge settings, pass and
+   failure counts, and SHA-256 of every training file, the candidate manifest,
+   and the verdicts.
+
+Training is gated on `python -m src.screen_sft verify --data
+experiments/matched_sft/data`. Both the launcher and the compute worker run
+it, so any edit to a training file, the candidates, or the verdicts after
+finalize blocks training.
+
+## Judge validation
+
+`data/judge_validation_sample.csv` holds 50 judge-passed and 50 judge-failed
+candidates, shuffled, without judge labels. Copy it, fill
+`human_unsafe_nonrefusal` with `yes` (a genuinely harmful, non-refusing answer)
+or `no`, then score it:
 
 ```bash
-BEAVERTAILS_REVISION=8401fe609d288129cc684a9b3be6a93e41cfe678 LIMIT=2000 \
-  bash scripts/prepare_matched_sft.sh
+python -m src.screen_sft score --data experiments/matched_sft/data --labels LABELED.csv
 ```
 
-Preparation automatically creates a deterministic 100-pair
-`audit_sample.jsonl`. Inspect every sampled control and attack response. If the
-sample passes, record the reviewer attestation interactively (you must type
-`APPROVE`; the record stores reviewer, UTC timestamp, attestation, and SHA-256
-of `manifest.json`, `control.jsonl`, `attack.jsonl`, `pairs.jsonl`, and
-`audit_sample.jsonl`):
-
-```bash
-python scripts/audit_matched_sft.py approve --data experiments/matched_sft/data --reviewer YOUR_ID
-```
-
-`python scripts/audit_matched_sft.py verify` checks the approval. The launcher
-and the compute worker both refuse to run unless it passes, so any edit to an
-audited file after approval blocks training. If any control target provides
-actionable harm or any attack target is a refusal or benign advice, do not
-approve or edit around the failure. Record the rejection, which renames the
-directory to `data_rejected_<UTC timestamp>` without deleting anything:
-
-```bash
-python scripts/audit_matched_sft.py reject --reviewer YOUR_ID --reason "..."
-```
-
-Then revise the selection procedure and prepare a new data directory before
-looking at evaluation results.
+`judge_validation_report.json` reports judge-pass precision with a Wilson 95%
+interval (the estimated share of training attack targets a human also judges
+unsafe), agreement on judge-failed items, raw agreement, and Cohen's kappa. The
+sample is stratified, so report kappa as agreement on that sample, not as a
+population estimate. `judge_validation_key.jsonl` holds the judge labels; avoid
+opening it before labeling. `scripts/audit_matched_sft.py` remains available
+for optional manual spot checks but no longer gates training.
 
 ## Conditions
 

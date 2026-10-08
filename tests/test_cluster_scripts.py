@@ -9,9 +9,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
-PAPER_LAUNCHERS = ("prepare_matched_sft.sh", "run_matched_sft.sh", "run_script_transfer.sh")
-PAPER_SBATCH = ("matched_sft.sbatch.sh", "script_transfer.sbatch.sh")
-PAPER_WORKERS = ("matched_sft_worker.sh", "script_transfer_worker.sh")
+PAPER_LAUNCHERS = (
+    "prepare_matched_sft.sh", "run_screen_matched_sft.sh", "finalize_matched_sft.sh",
+    "run_matched_sft.sh", "run_script_transfer.sh",
+)
+PAPER_SBATCH = ("screen_matched_sft.sbatch.sh", "matched_sft.sbatch.sh", "script_transfer.sbatch.sh")
+PAPER_WORKERS = ("screen_matched_sft_worker.sh", "matched_sft_worker.sh", "script_transfer_worker.sh")
 
 HARNESS = r"""
 set -euo pipefail
@@ -125,15 +128,17 @@ class ClusterScriptPolicyTests(unittest.TestCase):
             self.assertIn("load_miniconda_module", text)
         self.assertIn("module load miniconda/miniconda3", (SCRIPTS / "common.sh").read_text())
 
-    def test_matched_sft_submission_and_worker_verify_audit(self):
+    def test_matched_sft_submission_and_worker_verify_screen(self):
         for name in ("run_matched_sft.sh", "matched_sft_worker.sh"):
             text = (SCRIPTS / name).read_text()
-            self.assertIn("scripts/audit_matched_sft.py verify", text)
+            self.assertIn("-m src.screen_sft verify", text)
         launcher = (SCRIPTS / "run_matched_sft.sh").read_text()
-        self.assertLess(launcher.index("audit_matched_sft.py verify"), launcher.index("sbatch "))
+        self.assertLess(launcher.index("src.screen_sft verify"), launcher.index("sbatch "))
+        worker = (SCRIPTS / "matched_sft_worker.sh").read_text()
+        self.assertLess(worker.index("src.screen_sft verify"), worker.index('mkdir -p "$result_root"'))
 
     def test_launchers_reject_gres_arguments(self):
-        for name in ("run_matched_sft.sh", "run_script_transfer.sh"):
+        for name in ("run_screen_matched_sft.sh", "run_matched_sft.sh", "run_script_transfer.sh"):
             text = (SCRIPTS / name).read_text()
             self.assertIn("--gres*)", text)
             self.assertLess(text.index("--gres*)"), text.index("sbatch "))

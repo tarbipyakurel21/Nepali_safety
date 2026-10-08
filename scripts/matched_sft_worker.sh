@@ -12,7 +12,7 @@ if not torch.cuda.is_available():
     raise SystemExit("CUDA GPU is not visible inside the allocation")
 print("gpu=", torch.cuda.get_device_name(0))
 PY
-"$PAPER_PYTHON" scripts/audit_matched_sft.py verify --data experiments/matched_sft/data
+"$PAPER_PYTHON" -m src.screen_sft verify --data experiments/matched_sft/data
 for csv in datasets/english_questions.csv datasets/nepali_questions.csv datasets/romanized_nepali_questions.csv; do
   [[ -f "$csv" ]] || { echo "Missing evaluation input: $csv" >&2; exit 1; }
 done
@@ -37,7 +37,7 @@ import torch
 assert torch.cuda.is_available(), 'CUDA GPU required'
 root=Path(os.environ['SUBMIT_DIR']); data=root/'experiments/matched_sft/data'
 files=[data/'control.jsonl',data/'attack.jsonl',data/'pairs.jsonl',data/'manifest.json',
-       data/'audit_sample.jsonl',data/'AUDIT_APPROVED.json',
+       data/'SCREEN_REPORT.json',
        *[root/'datasets'/f'{x}_questions.csv' for x in ('english','nepali','romanized_nepali')]]
 meta={'run_id':os.environ['RUN_ID'],'complete':False,'git_commit':os.environ.get('MATCHED_SFT_GIT_COMMIT'),
       'python':platform.python_version(),'gpu':torch.cuda.get_device_name(0),
