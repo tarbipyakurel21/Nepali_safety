@@ -197,6 +197,13 @@ class ClusterScriptPolicyTests(unittest.TestCase):
         worker = (SCRIPTS / "script_transfer_worker.sh").read_text()
         self.assertIn("assert m.get('complete') is True", worker)
 
+    def test_training_batch_scripts_initialize_distributed_rendezvous(self):
+        for name in ("matched_sft.sbatch.sh", "script_transfer.sbatch.sh"):
+            with self.subTest(script=name):
+                text = (SCRIPTS / name).read_text()
+                self.assertIn("slurm_master", text)
+                self.assertLess(text.index("slurm_master"), text.index("srun "))
+
     def test_launchers_reject_gres_arguments(self):
         for name in ("run_screen_matched_sft.sh", "run_matched_sft.sh", "run_script_transfer.sh"):
             text = (SCRIPTS / name).read_text()

@@ -14,4 +14,5 @@ source "$SUBMIT_DIR/scripts/common.sh"
 load_miniconda_module
 export CONDA_ENV="${CONDA_ENV:-$HOME/myenv}"
 require_paper_cluster_env
+slurm_master
 srun bash scripts/matched_sft_worker.sh
