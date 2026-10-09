@@ -182,10 +182,18 @@ class ClusterScriptPolicyTests(unittest.TestCase):
         worker = (SCRIPTS / "matched_sft_worker.sh").read_text()
         self.assertLess(worker.index("src.screen_sft verify"), worker.index('mkdir -p "$result_root"'))
 
-    def test_matched_sft_worker_does_not_expand_new_local_under_nounset(self):
-        worker = (SCRIPTS / "matched_sft_worker.sh").read_text()
-        self.assertIn('local condition="$1" adapter="$2"\n  local out="$result_root/$condition"', worker)
-        self.assertNotIn('local condition="$1" adapter="$2" out="$result_root/$condition"', worker)
+    def test_workers_do_not_expand_new_local_under_nounset(self):
+        for name in ("matched_sft_worker.sh", "script_transfer_worker.sh"):
+            with self.subTest(script=name):
+                worker = (SCRIPTS / name).read_text()
+                self.assertIn(
+                    'local condition="$1" adapter="$2"\n  local out="$result_root/$condition"',
+                    worker,
+                )
+                self.assertNotIn(
+                    'local condition="$1" adapter="$2" out="$result_root/$condition"',
+                    worker,
+                )
 
     def test_script_transfer_chains_after_successful_training(self):
         launcher = (SCRIPTS / "run_matched_sft.sh").read_text()

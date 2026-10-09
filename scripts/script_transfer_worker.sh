@@ -50,7 +50,8 @@ Path(os.environ['RESULT_ROOT'],'run.json').write_text(json.dumps(meta,indent=2)+
 PY
 
 evaluate_condition() {
-  local condition="$1" adapter="$2" out="$result_root/$condition"
+  local condition="$1" adapter="$2"
+  local out="$result_root/$condition"
   mkdir "$out"
   for percent in 25 50 75; do
     for direction in devanagari_romanized romanized_devanagari; do
