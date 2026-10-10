@@ -33,9 +33,14 @@ def prompt(row):
     if row["language"] == "eng_Latn":
         instruction = "Read the passage and answer the question using only the passage. Reply with exactly one letter: A, B, C, or D."
         passage, question = "Passage", "Question"
-    else:
+    elif row["language"] == "npi_Deva":
         instruction = "अनुच्छेद पढ्नुहोस् र त्यसकै आधारमा प्रश्नको उत्तर दिनुहोस्। उत्तरमा A, B, C वा D मध्ये एउटा अक्षर मात्र लेख्नुहोस्।"
         passage, question = "अनुच्छेद", "प्रश्न"
+    elif row["language"] == "npi_Latn":
+        instruction = "Anuchhed padhnuhos ra tyaskai aadharama prashnako uttar dinuhos. Uttarma A, B, C wa D madhye euta akshar matra lekhnu hos."
+        passage, question = "Anuchhed", "Prashna"
+    else:
+        raise ValueError(f"Unsupported Belebele language: {row['language']}")
     options = "\n".join(f"{letter}. {answer}" for letter, answer in zip(LETTERS, row["choices"]))
     return f"{instruction}\n\n{passage}: {row['passage']}\n\n{question}: {row['question']}\n{options}"
 
@@ -60,7 +65,10 @@ def normalize(raw, language):
 
 
 def validate_pairs(rows, expected=None):
-    groups = {lang: {} for lang in LANGUAGES}
+    languages = tuple(sorted({row["language"] for row in rows}))
+    if not languages:
+        raise ValueError("No Belebele rows")
+    groups = {lang: {} for lang in languages}
     for row in rows:
         group = groups[row["language"]]
         if row["id"] in group:
@@ -68,12 +76,12 @@ def validate_pairs(rows, expected=None):
         if row["gold"] not in LETTERS:
             raise ValueError("Invalid gold answer")
         group[row["id"]] = row
-    en, ne = [groups[lang] for lang in LANGUAGES]
-    if not en or en.keys() != ne.keys():
-        raise ValueError("English and Nepali question IDs must match exactly")
-    if expected is not None and len(en) != expected:
-        raise ValueError(f"Expected {expected} questions per language; got {len(en)}")
-    if any(en[key]["gold"] != ne[key]["gold"] for key in en):
+    keys = list(groups.values())
+    if any(not group or group.keys() != keys[0].keys() for group in keys):
+        raise ValueError("Belebele question IDs must match exactly across languages")
+    if expected is not None and any(len(group) != expected for group in keys):
+        raise ValueError(f"Expected {expected} questions per language")
+    if any(group[key]["gold"] != keys[0][key]["gold"] for group in keys[1:] for key in keys[0]):
         raise ValueError("Parallel questions have different gold labels")
 
 
@@ -251,7 +259,8 @@ def compare(args):
                "confidence_interval": "paired percentile bootstrap clustered by passage", "languages": {}}
     lines = ["# Belebele before/after comparison", "", "Accuracy and changes are percentages / percentage points.", "",
              "| Language | N | Before | After | Change (pp) | 95% CI (pp) |", "|---|---:|---:|---:|---:|---|"]
-    for lang in LANGUAGES:
+    languages = tuple(sorted({row["language"] for row in before}))
+    for lang in languages:
         b, a = [[r for r in rows if r["language"] == lang] for rows in (before, after)]
         stats = paired_stats(b, a, args.bootstrap, args.seed)
         summary["languages"][lang] = stats

@@ -105,3 +105,36 @@ base model as `--model`.
 - [Official data and evaluation notes](https://github.com/facebookresearch/belebele)
 - [Dataset](https://huggingface.co/datasets/facebook/belebele)
 - [Gemma 3 Transformers integration](https://huggingface.co/docs/transformers/model_doc/gemma3)
+
+## Reviewed Romanized-Nepali extension
+
+The repository includes a two-model transliteration and review pipeline. It
+creates candidates only; it does not silently turn an automatic
+transliteration into evaluation data:
+
+```bash
+bash scripts/romanize_belebele.sh
+```
+
+The default candidates use Qwen3-8B and Gemma 3 12B. Override `MODEL_A`,
+`MODEL_B`, `REVISION_A`, and `REVISION_B` when pinning different models. Run
+this on a GPU allocation with a private `HF_HOME`.
+
+Review `datasets/belebele_romanized/review/review_packet.jsonl` with two
+fluent Nepali speakers. For each item, reviewers must select `accept_a`,
+`accept_b`, or `edited`, fill all six final fields, or select `exclude`.
+The text must remain Romanized Nepali, preserve answer-relevant meaning, and
+contain no Devanagari. After adjudication, write decisions back to the
+`review` object and create the three-language frozen dataset:
+
+```bash
+python -m src.romanize_belebele adjudicate \
+  --review datasets/belebele_romanized/review/review_packet.jsonl \
+  --output datasets/belebele_romanized/final
+```
+
+The resulting `final/questions.jsonl` is accepted by `src.belebele` and adds
+`npi_Latn` alongside English and Devanagari. Excluded items are removed from
+all three languages so alignment remains valid. Preserve the review packet,
+reviewer decisions, model revisions, and final manifest. Do not report scores
+from candidate data before review.

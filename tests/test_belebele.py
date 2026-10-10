@@ -44,6 +44,14 @@ class BelebeleTests(unittest.TestCase):
         for answer in ("A or B", "I cannot answer", "Answer: C", "", "AB", "A. Explanation"):
             self.assertIsNone(parse_letter(answer))
 
+    def test_romanized_prompt_and_three_language_alignment(self):
+        rows = fixture()
+        romanized = dict(rows[1], language="npi_Latn", prompt="")
+        romanized["prompt"] = __import__("src.belebele", fromlist=["prompt"]).prompt(romanized)
+        rows.append(romanized)
+        validate_pairs(rows, 1)
+        self.assertIn("Anuchhed", romanized["prompt"])
+
     def test_cluster_bootstrap_and_transitions(self):
         base = [{"passage_id": "shared", "correct": True, "generated_correct": True, "invalid": False},
                 {"passage_id": "shared", "correct": False, "generated_correct": False, "invalid": True}]
