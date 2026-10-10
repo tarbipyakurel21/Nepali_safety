@@ -1,0 +1,26 @@
+{
+  "run_id": "matched_sft_36482",
+  "complete": true,
+  "git_commit": "6d765a91c78a12805a11bef2b2b2571543995d71",
+  "python": "3.12.14",
+  "gpu": "NVIDIA GeForce RTX 5070 Ti",
+  "model": "google/gemma-3-4b-it",
+  "model_revision": "093f9f388b31de276ce2de164bdc2081324b9767",
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "epochs": 1.0,
+  "learning_rate": 1e-05,
+  "input_sha256": {
+    "experiments/matched_sft/data/control.jsonl": "3320956125eacda02865cb07d1d76254a92b50894767560bf1bf4c3404fc4ddb",
+    "experiments/matched_sft/data/attack.jsonl": "399e6ab6c9340311fd489ed89f81bcb94c9de2391ce265a50d96ca0c70c02094",
+    "experiments/matched_sft/data/pairs.jsonl": "7b6950abc8b57007b9490ff9cb691a63d514ab4e438a456fca747dc1ee9cb14f",
+    "experiments/matched_sft/data/manifest.json": "f60759f11ec9efa3a407657ca713c0653c59af055ce62f89ded23a72e9645ad8",
+    "experiments/matched_sft/data/SCREEN_REPORT.json": "9559019a72e7022e9460c7390e001216d017bf3ceef95e1832abea7b31a51235",
+    "datasets/english_questions.csv": "55c176e512cd3328e8907d8308065f9d3eec62e68157f9f7ed876f655e197237",
+    "datasets/nepali_questions.csv": "d1e8a9a3754a98b2dccb3a4209a4ef3fadb2705dfbdbccdf7edbc31b8eb60661",
+    "datasets/romanized_nepali_questions.csv": "c4e2d22e598fcc6a3d0348522d84ca34a8c4092fa66fe4c8bda91157f8da9a65"
+  }
+}

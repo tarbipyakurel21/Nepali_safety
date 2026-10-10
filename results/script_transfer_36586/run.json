@@ -1,0 +1,29 @@
+{
+  "run_id": "script_transfer_36586",
+  "complete": true,
+  "source_run": "matched_sft_36482",
+  "model_revision": "093f9f388b31de276ce2de164bdc2081324b9767",
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "percentages": [
+    25,
+    50,
+    75
+  ],
+  "directions": [
+    "devanagari_romanized",
+    "romanized_devanagari"
+  ],
+  "input_sha256": {
+    "mixed25_devanagari_romanized_questions.csv": "3f15dd71f73312aac122328de34e94e38116f4974c2443275b1869e203d00a8f",
+    "mixed25_romanized_devanagari_questions.csv": "37d1b92ad1046c5bebf42dd2e9b36d4bd3c8fe1a00eeab1dbef343ed8ad00007",
+    "mixed50_devanagari_romanized_questions.csv": "25566b43ca1d28a3b602352bcd9320babf5f301b00be3cb174b5245407f2cc6f",
+    "mixed50_romanized_devanagari_questions.csv": "0c546db9f9b4ed8b51179fd56792b5cd225386fe31f6b239adc418d852543161",
+    "mixed75_devanagari_romanized_questions.csv": "3da3429bdecdb4ef631a0dc29ee7b2bce0cbfb3aec261312f64736c65c899b6b",
+    "mixed75_romanized_devanagari_questions.csv": "56cfd8a2ae99994fa023a418556c071a34f157268e723080b9bb14d1ffa973c7",
+    "script_switch_sweep_manifest.jsonl": "47510aad079c072e626ad44c08d03d003658b9ae94c27dec5a9c743c666fa353"
+  }
+}

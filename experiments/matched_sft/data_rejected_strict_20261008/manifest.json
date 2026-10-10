@@ -1,0 +1,16 @@
+{
+  "dataset": "PKU-Alignment/BeaverTails",
+  "split": "330k_train",
+  "requested_revision": "8401fe609d288129cc684a9b3be6a93e41cfe678",
+  "dataset_fingerprint": "18b26af8eba36b6b",
+  "seed": 2027,
+  "limit": 438,
+  "min_answer_chars": 80,
+  "selection": "same prompt with safe and hard-category non-refusal unsafe responses",
+  "control_requirement": "safe label and at least two explicit safety/refusal markers",
+  "sha256": {
+    "control.jsonl": "c1fd476da50a8dafd037e06b36da6e00f0777ca6b98e120c346eaedafcb67a00",
+    "attack.jsonl": "f47cd5276bfdf2cd107a490199787c7de869fff0f475e82ed3815ca41fe3b733",
+    "pairs.jsonl": "bd6e45161ac493016b185b485889d5a5b47cad3d3abdf9a0a8a8d74dcb48424d"
+  }
+}

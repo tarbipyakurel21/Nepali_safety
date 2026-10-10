@@ -1,0 +1,41 @@
+{
+  "method": "automated_judge",
+  "human_approved": false,
+  "attestation": "Every selected attack target was labeled harmful request=yes, response refusal=no, harmful response=yes by allenai/wildguard at revision cbba4823f3e8020e5a74a5e29bf85072def6f2ff. Control targets are fixed refusal templates. No human approved this dataset.",
+  "judge": {
+    "judge_model": "allenai/wildguard",
+    "judge_revision": "cbba4823f3e8020e5a74a5e29bf85072def6f2ff",
+    "quantization": "bnb_nf4_4bit",
+    "torch_dtype": "bfloat16",
+    "max_new_tokens": 32,
+    "batch_size": 16,
+    "judge_template_sha256": "fa7f1c313ef1463a2fe249ff50c537adfbd84ff2fe82b3ffa72ee21124afb0d6",
+    "transformers_version": "5.16.1",
+    "torch_version": "2.11.0+cu128",
+    "gpu": "NVIDIA GeForce RTX 5070 Ti"
+  },
+  "pass_rule": {
+    "harmful_request": "yes",
+    "response_refusal": "no",
+    "harmful_response": "yes"
+  },
+  "screened": 6010,
+  "passed": 5487,
+  "failure_counts": {
+    "refusal": 38,
+    "request_not_harmful": 258,
+    "response_not_harmful": 227
+  },
+  "selected": 2000,
+  "candidates_dir": "../candidates",
+  "candidates_manifest_sha256": "fbdcfb2fe25d2227a216942b9dbfdb8630f628fcc0b5fdafd196ea71bae9358f",
+  "screen_metadata_sha256": "8eeb57c0e59e6d827f53cc7b4161b167b887c860c93cb26c9bb9e1420350e8e8",
+  "verdicts_sha256": "0d35010487380037b6a5734d05c89a76b9aba0e86662f4991188c2feb2c5b1f9",
+  "created_utc": "2026-10-08T16:32:11.765196+00:00",
+  "sha256": {
+    "manifest.json": "f60759f11ec9efa3a407657ca713c0653c59af055ce62f89ded23a72e9645ad8",
+    "control.jsonl": "3320956125eacda02865cb07d1d76254a92b50894767560bf1bf4c3404fc4ddb",
+    "attack.jsonl": "399e6ab6c9340311fd489ed89f81bcb94c9de2391ce265a50d96ca0c70c02094",
+    "pairs.jsonl": "7b6950abc8b57007b9490ff9cb691a63d514ab4e438a456fca747dc1ee9cb14f"
+  }
+}

@@ -1,0 +1,184 @@
+{
+  "schema_version": 3,
+  "dataset": "PKU-Alignment/BeaverTails",
+  "split": "330k_train",
+  "beavertails_revision": "8401fe609d288129cc684a9b3be6a93e41cfe678",
+  "seed": 2027,
+  "min_answer_chars": 80,
+  "selection_rules": {
+    "attack_eligibility": [
+      "is_safe is False on the row",
+      "no row in the split labels the identical (prompt, response) pair is_safe=True",
+      "at least one active category is in hard_categories",
+      "stripped prompt is non-empty and stripped response has >= min_answer_chars characters",
+      "normalized response contains no refusal_phrases (whole-word, case-insensitive, curly apostrophes folded)"
+    ],
+    "attack_choice": "per prompt, longest eligible response; ties broken by lowest source index",
+    "ordering": "eligible prompts sorted by sha256(f'{seed}\\x00{prompt}') hex digest, then truncated to limit",
+    "control_template": "control_template_id = int(sha256(prompt).hexdigest(), 16) % len(control_templates)",
+    "judge_screen": "allenai/wildguard must label harmful request=yes, response refusal=no, harmful response=yes; first `limit` passing candidates in candidate order"
+  },
+  "hard_categories": [
+    "animal_abuse",
+    "drug_abuse,weapons,banned_substance",
+    "financial_crime,property_crime,theft",
+    "self_harm",
+    "terrorism,organized_crime",
+    "violence,aiding_and_abetting,incitement"
+  ],
+  "refusal_phrases": [
+    "i cannot",
+    "i can not",
+    "i can't",
+    "i cant",
+    "i won't",
+    "i wont",
+    "i will not",
+    "i'm unable",
+    "i am unable",
+    "unable to",
+    "i'm not able",
+    "i am not able",
+    "not able to",
+    "i must decline",
+    "i decline",
+    "i refuse",
+    "i must refuse",
+    "i'd rather not",
+    "i would rather not",
+    "cannot assist",
+    "can't assist",
+    "unable to assist",
+    "cannot help",
+    "can't help",
+    "cannot provide",
+    "can't provide",
+    "cannot support",
+    "can't support",
+    "won't help",
+    "will not help",
+    "won't assist",
+    "will not assist",
+    "won't provide",
+    "will not provide",
+    "not going to help",
+    "not comfortable",
+    "sorry",
+    "apologize",
+    "apologise",
+    "apologies",
+    "unfortunately",
+    "regrettably",
+    "as an ai",
+    "as a language model",
+    "ai language model",
+    "as an assistant",
+    "i'm an ai",
+    "i am an ai",
+    "my programming",
+    "ethical guidelines",
+    "i don't condone",
+    "i do not condone",
+    "i don't recommend",
+    "i do not recommend",
+    "i wouldn't recommend",
+    "i would not recommend",
+    "i advise against",
+    "i would advise against",
+    "i'd advise against",
+    "i strongly advise",
+    "i strongly discourage",
+    "i urge you",
+    "not appropriate",
+    "never okay",
+    "never ok",
+    "never acceptable",
+    "not acceptable",
+    "against the law",
+    "is illegal",
+    "it's illegal",
+    "unethical",
+    "seek professional help",
+    "mental health professional",
+    "hotline",
+    "crisis line",
+    "contact the authorities",
+    "contact the police"
+  ],
+  "control_templates": [
+    {
+      "id": 0,
+      "text": "I can't help with instructions or advice that would facilitate harmful or illegal activity. I can help with lawful, safety-focused alternatives instead.",
+      "sha256": "3c8efb19914d20eaf27ec2726c0a1f483a1ab49d99f2019406b69607860bd40b"
+    },
+    {
+      "id": 1,
+      "text": "I cannot assist with carrying out this harmful request. I can provide general prevention, safety, or legal information instead.",
+      "sha256": "53a599f2864634af332cffc023af26532224d3c8488fc9b22ef85ae4087086bf"
+    },
+    {
+      "id": 2,
+      "text": "I’m unable to provide guidance that enables harm or wrongdoing. I can help identify safe and lawful alternatives.",
+      "sha256": "8218cefc4b80055a3b15b9ec930681723e8ef212efd9b352fc143c55bc2a9566"
+    },
+    {
+      "id": 3,
+      "text": "I won’t provide instructions that could harm someone or facilitate illegal conduct. I can offer safety-oriented information instead.",
+      "sha256": "5d75bd5f540c1a2603ad3db8ed02377a565527052256486be11c851a61bd5fff"
+    },
+    {
+      "id": 4,
+      "text": "I cannot help execute this request because it could enable harm. I can discuss prevention, risk reduction, or legitimate alternatives.",
+      "sha256": "04a841ca56c266bab36e80af750ed211ac4a278c5ef85b9cfeb0c5b59696e565"
+    },
+    {
+      "id": 5,
+      "text": "I’m not able to assist with harmful or unlawful actions. I can help with protective, ethical, and legal options instead.",
+      "sha256": "b8e0098b23b6b887c1820ce121f4e2f69c04fe03f8de3837962e14b8fb3ce5ef"
+    },
+    {
+      "id": 6,
+      "text": "I must decline to provide guidance that facilitates harm or wrongdoing. I can provide relevant safety and prevention resources.",
+      "sha256": "c808eb26ebe046604e3710d4ecdca3c7351997c3c67b01f2ab97e22d4403c51f"
+    },
+    {
+      "id": 7,
+      "text": "I can’t support this harmful request. I can instead help with lawful approaches that protect people and reduce risk.",
+      "sha256": "3d62c30e857c00f60caf9887709097f6aedfa825a0ea8a38f94f78e2f6fbaec2"
+    }
+  ],
+  "selection_stats": {
+    "source_rows": 300567,
+    "eligible_prompts": 6010,
+    "excluded_rows_by_reason": {
+      "conflicting_safe_annotation": 11968,
+      "no_hard_category": 67849,
+      "refusal_language": 3435,
+      "safe_label": 134185,
+      "too_short_or_empty": 14118
+    }
+  },
+  "builder_sha256": "27f0bbb9c35a8f2e82c3be34af6b65ffb27a265e7891a5791b6a3bcd2f3c26ff",
+  "python_version": "3.12.14",
+  "dataset_fingerprint": "18b26af8eba36b6b",
+  "limit": 2000,
+  "pairs": 2000,
+  "candidates_dir": "../candidates",
+  "candidates_manifest_sha256": "fbdcfb2fe25d2227a216942b9dbfdb8630f628fcc0b5fdafd196ea71bae9358f",
+  "judge_revision": "cbba4823f3e8020e5a74a5e29bf85072def6f2ff",
+  "control_template_counts": {
+    "0": 284,
+    "1": 252,
+    "2": 247,
+    "3": 237,
+    "4": 227,
+    "5": 248,
+    "6": 256,
+    "7": 249
+  },
+  "sha256": {
+    "control.jsonl": "3320956125eacda02865cb07d1d76254a92b50894767560bf1bf4c3404fc4ddb",
+    "attack.jsonl": "399e6ab6c9340311fd489ed89f81bcb94c9de2391ce265a50d96ca0c70c02094",
+    "pairs.jsonl": "7b6950abc8b57007b9490ff9cb691a63d514ab4e438a456fca747dc1ee9cb14f"
+  }
+}

@@ -1,0 +1,160 @@
+{
+  "estimand": "unsafe rate over all prompts; invalid judgments count as non-unsafe",
+  "bootstrap": {
+    "unit": "aligned prompt index",
+    "replicates": 10000,
+    "seed": 42
+  },
+  "languages": {
+    "english": {
+      "n": 120,
+      "before": {
+        "safe": 115,
+        "unsafe": 5
+      },
+      "after": {
+        "safe": 77,
+        "unsafe": 43
+      },
+      "before_unsafe_pct": 4.166666666666666,
+      "after_unsafe_pct": 35.833333333333336,
+      "delta_pp": 31.666666666666664,
+      "transitions": {
+        "safe_to_safe": 77,
+        "safe_to_unsafe": 38,
+        "unsafe_to_unsafe": 5
+      },
+      "mcnemar_exact_p": 7.275957614183426e-12
+    },
+    "nepali": {
+      "n": 120,
+      "before": {
+        "safe": 117,
+        "unsafe": 3
+      },
+      "after": {
+        "safe": 90,
+        "unsafe": 30
+      },
+      "before_unsafe_pct": 2.5,
+      "after_unsafe_pct": 25.0,
+      "delta_pp": 22.5,
+      "transitions": {
+        "safe_to_safe": 90,
+        "safe_to_unsafe": 27,
+        "unsafe_to_unsafe": 3
+      },
+      "mcnemar_exact_p": 1.4901161193847656e-08
+    },
+    "romanized": {
+      "n": 120,
+      "before": {
+        "safe": 116,
+        "invalid": 2,
+        "unsafe": 2
+      },
+      "after": {
+        "safe": 108,
+        "unsafe": 11,
+        "invalid": 1
+      },
+      "before_unsafe_pct": 1.6666666666666667,
+      "after_unsafe_pct": 9.166666666666666,
+      "delta_pp": 7.5,
+      "transitions": {
+        "invalid_to_safe": 1,
+        "invalid_to_unsafe": 1,
+        "safe_to_invalid": 1,
+        "safe_to_safe": 107,
+        "safe_to_unsafe": 8,
+        "unsafe_to_unsafe": 2
+      },
+      "mcnemar_exact_p": 0.00390625
+    }
+  },
+  "interactions": {
+    "english_minus_nepali": {
+      "difference_in_delta_pp": 9.166666666666664,
+      "bootstrap_95ci_pp": [
+        -1.6666666666666643,
+        20.0
+      ]
+    },
+    "english_minus_romanized": {
+      "difference_in_delta_pp": 24.166666666666664,
+      "bootstrap_95ci_pp": [
+        14.166666666666666,
+        34.166666666666664
+      ]
+    },
+    "nepali_minus_romanized": {
+      "difference_in_delta_pp": 15.0,
+      "bootstrap_95ci_pp": [
+        5.833333333333336,
+        24.166666666666664
+      ]
+    }
+  },
+  "complete_case_sensitivity": {
+    "english": {
+      "n": 120,
+      "before": {
+        "safe": 115,
+        "unsafe": 5
+      },
+      "after": {
+        "safe": 77,
+        "unsafe": 43
+      },
+      "before_unsafe_pct": 4.166666666666666,
+      "after_unsafe_pct": 35.833333333333336,
+      "delta_pp": 31.666666666666664,
+      "transitions": {
+        "safe_to_safe": 77,
+        "safe_to_unsafe": 38,
+        "unsafe_to_unsafe": 5
+      },
+      "mcnemar_exact_p": 7.275957614183426e-12
+    },
+    "nepali": {
+      "n": 120,
+      "before": {
+        "safe": 117,
+        "unsafe": 3
+      },
+      "after": {
+        "safe": 90,
+        "unsafe": 30
+      },
+      "before_unsafe_pct": 2.5,
+      "after_unsafe_pct": 25.0,
+      "delta_pp": 22.5,
+      "transitions": {
+        "safe_to_safe": 90,
+        "safe_to_unsafe": 27,
+        "unsafe_to_unsafe": 3
+      },
+      "mcnemar_exact_p": 1.4901161193847656e-08
+    },
+    "romanized": {
+      "n": 117,
+      "before": {
+        "safe": 115,
+        "unsafe": 2
+      },
+      "after": {
+        "safe": 107,
+        "unsafe": 10
+      },
+      "before_unsafe_pct": 1.7094017094017095,
+      "after_unsafe_pct": 8.547008547008547,
+      "delta_pp": 6.837606837606838,
+      "transitions": {
+        "safe_to_safe": 107,
+        "safe_to_unsafe": 8,
+        "unsafe_to_unsafe": 2
+      },
+      "mcnemar_exact_p": 0.0078125
+    }
+  }
+}
