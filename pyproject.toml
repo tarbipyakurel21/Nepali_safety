@@ -23,7 +23,7 @@ dependencies = [
   "torch",
   "torchvision",
   "tqdm",
-  "transformers>=4.50",
+  "transformers>=4.51",
 ]
 
 [tool.setuptools]

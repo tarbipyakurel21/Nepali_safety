@@ -135,3 +135,18 @@ Every job writes to new `results/matched_sft_JOBID` and
 `insecure_model/outputs/matched_sft_JOBID` directories and refuses reuse.
 For every seed it automatically writes paired base-versus-attack and
 control-versus-attack language-interaction reports under `analyses/`.
+
+## Direct multilingual second judge
+
+Re-judge an already completed run with Qwen3Guard without repeating training,
+generation, translation, or Belebele:
+
+```bash
+SOURCE_RUN=matched_sft_JOBID bash scripts/run_qwen_guard_rejudge.sh
+```
+
+The job runs `Qwen/Qwen3Guard-Gen-4B` in 4-bit mode on the saved original-language
+prompt and response pairs. It includes the base and every complete control/attack
+seed directory it discovers. Resumable JSONL verdicts, pinned model metadata,
+input hashes, and strict (`unsafe`) and broad (`unsafe` + `controversial`)
+summaries are written under `results/matched_sft_JOBID/qwen3guard/`.
