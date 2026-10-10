@@ -8,7 +8,12 @@ import re
 from pathlib import Path
 
 from src.clean import clean_field
-from src.judge_qwen_guard import LANGUAGES, discover_conditions, load_model, read_jsonl
+from src.judge_qwen_guard import (
+    discover_conditions,
+    load_model,
+    read_jsonl,
+    read_resumable_jsonl,
+)
 
 
 MODEL_ID = "Qwen/Qwen3-8B"
@@ -78,7 +83,7 @@ def main() -> None:
         for language in SOURCE_LANGUAGES:
             source = read_jsonl(run_dir / condition / f"{language}.jsonl")
             translated_path = output_dir / condition / f"{language}_translated.jsonl"
-            existing = read_jsonl(translated_path) if translated_path.exists() else []
+            existing = read_resumable_jsonl(translated_path) if translated_path.exists() else []
             if len(existing) > len(source):
                 raise ValueError(f"output longer than input: {translated_path}")
             for start in range(len(existing), len(source), args.batch_size):

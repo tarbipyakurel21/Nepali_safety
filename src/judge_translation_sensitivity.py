@@ -8,7 +8,7 @@ import re
 from collections import Counter
 from pathlib import Path
 
-from src.judge_qwen_guard import classify_batch, discover_conditions, load_model, read_jsonl
+from src.judge_qwen_guard import classify_batch, load_model, read_jsonl, read_resumable_jsonl
 
 
 MODELS = {
@@ -73,7 +73,7 @@ def main() -> None:
         for language in LANGUAGES:
             rows = read_jsonl(root / condition / f"{language}_en_cleaned.jsonl")
             path = out_root / condition / f"{language}.jsonl"
-            existing = read_jsonl(path) if path.exists() else []
+            existing = read_resumable_jsonl(path) if path.exists() else []
             for start in range(len(existing), len(rows), args.batch_size):
                 batch = rows[start : start + args.batch_size]
                 if args.backend == "llama_guard":

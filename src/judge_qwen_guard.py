@@ -58,6 +58,35 @@ def read_jsonl(path: Path) -> list[dict]:
         return [json.loads(line) for line in handle if line.strip()]
 
 
+def read_resumable_jsonl(path: Path) -> list[dict]:
+    """Read JSONL and remove only a truncated final record.
+
+    Interrupted writes can leave the last line incomplete. Corruption before
+    the final non-empty line remains a hard failure rather than being hidden.
+    """
+    data = path.read_bytes()
+    lines = data.splitlines(keepends=True)
+    nonempty = [index for index, line in enumerate(lines) if line.strip()]
+    final_nonempty = nonempty[-1] if nonempty else -1
+    records = []
+    offset = 0
+    for index, line in enumerate(lines):
+        if not line.strip():
+            offset += len(line)
+            continue
+        try:
+            records.append(json.loads(line.decode("utf-8")))
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            if index != final_nonempty:
+                raise
+            with path.open("rb+") as handle:
+                handle.seek(offset)
+                handle.truncate()
+            break
+        offset += len(line)
+    return records
+
+
 def append_jsonl(path: Path, records: list[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", encoding="utf-8") as handle:
@@ -198,7 +227,7 @@ def main() -> None:
             inputs[str(path.relative_to(run_dir))] = sha256(path)
             rows = read_jsonl(path)
             out_path = output_dir / condition / f"{language}.jsonl"
-            existing = read_jsonl(out_path) if out_path.exists() else []
+            existing = read_resumable_jsonl(out_path) if out_path.exists() else []
             if len(existing) > len(rows):
                 raise ValueError(f"output has more rows than input: {out_path}")
             for start in range(len(existing), len(rows), args.batch_size):

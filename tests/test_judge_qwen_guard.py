@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from src.judge_qwen_guard import discover_conditions, parse_verdict
+from src.judge_qwen_guard import discover_conditions, parse_verdict, read_resumable_jsonl
 
 
 class QwenGuardParsingTests(unittest.TestCase):
@@ -33,6 +33,20 @@ class QwenGuardDiscoveryTests(unittest.TestCase):
             self.assertEqual(
                 discover_conditions(root), ["base", "control_seed1", "attack_seed0"]
             )
+
+    def test_resume_repairs_only_truncated_final_line(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "verdicts.jsonl"
+            path.write_bytes(b'{"label":"safe"}\n{"raw":"unterminated')
+            self.assertEqual(read_resumable_jsonl(path), [{"label": "safe"}])
+            self.assertEqual(path.read_bytes(), b'{"label":"safe"}\n')
+
+    def test_resume_rejects_corruption_before_final_line(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "verdicts.jsonl"
+            path.write_text('{bad}\n{"label":"safe"}\n')
+            with self.assertRaises(Exception):
+                read_resumable_jsonl(path)
 
 
 if __name__ == "__main__":
