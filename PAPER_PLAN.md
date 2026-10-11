@@ -67,6 +67,19 @@ python -m src.prepare_human_review --output annotations/direct_seed42
 Give annotators only `annotation_packet.jsonl` and `README.md`. The study
 coordinator retains `unblinding_key.jsonl` until labels are frozen.
 
+For the completed matched run, create a stratified two-author packet that
+includes direct-judge disagreements and automated positive/invalid cases:
+
+```bash
+python -m src.prepare_matched_human_review \
+  --run results/matched_sft_36482 \
+  --output annotations/matched_sft_36482_review
+```
+
+Both authors label independently before opening the unblinding key or
+adjudicating disagreements. The default packet samples 20 records per
+language/condition cell (280 records total).
+
 ## Exclusions from the central claim
 
 - Reconstructed decomposition outputs: the external uncensored reconstructor
@@ -94,3 +107,14 @@ outcome. Workshop fallback: TrustNLP or Multilingual Representation Learning.
    `experiments/matched_sft/README.md`.
 2. Bidirectional 25/50/75% script-mixture dose response using every adapter from
    experiment 1: `experiments/script_transfer/README.md`.
+
+The remaining Phase 1 analysis commands are:
+
+```bash
+python -m src.analyze_judge_sensitivity \
+  --run results/matched_sft_36482 \
+  --output analysis/judge_sensitivity
+
+# Run on a GPU allocation; this creates candidates, not final evaluation data.
+bash scripts/romanize_belebele.sh
+```
