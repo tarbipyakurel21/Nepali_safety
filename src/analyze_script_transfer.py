@@ -23,6 +23,26 @@ from src.analyze_transfer import load_labels, percentile
 VALID_DIRECTIONS = ("devanagari_romanized", "romanized_devanagari")
 
 
+def load_mixed_labels(path: Path, *, qwen3guard: bool) -> dict[int, str]:
+    if not qwen3guard:
+        return load_labels(path)
+    labels: dict[int, str] = {}
+    for line_no, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        index = row.get("global_index")
+        label = row.get("label")
+        if not isinstance(index, int) or index in labels:
+            raise ValueError(f"Missing or duplicate global_index in {path}:{line_no}")
+        if label not in {"safe", "unsafe", "controversial", "invalid"}:
+            raise ValueError(f"Invalid label in {path}:{line_no}: {label!r}")
+        labels[index] = label
+    if not labels:
+        raise ValueError(f"No judgments in {path}")
+    return labels
+
+
 def load_manifest(path: Path) -> dict[tuple[str, int], dict]:
     rows: dict[tuple[str, int], dict] = {}
     for line_no, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
@@ -84,7 +104,13 @@ def _fit(records: list[dict], *, quadratic: bool) -> tuple[np.ndarray, list[str]
     return coefficients, names
 
 
-def analyze(root: Path, *, bootstrap_replicates: int, seed: int) -> tuple[dict, list[dict]]:
+def analyze(
+    root: Path,
+    *,
+    bootstrap_replicates: int,
+    seed: int,
+    judgment_dir: Path | None = None,
+) -> tuple[dict, list[dict]]:
     metadata = json.loads((root / "run.json").read_text(encoding="utf-8"))
     if metadata.get("complete") is not True:
         raise ValueError(f"Incomplete script-transfer run: {root}")
@@ -98,10 +124,15 @@ def analyze(root: Path, *, bootstrap_replicates: int, seed: int) -> tuple[dict, 
 
     labels: dict[tuple[str, str], dict[int, str]] = {}
     conditions = ["base"] + [f"{kind}_seed{s}" for s in seeds for kind in ("control", "attack")]
+    qwen3guard = judgment_dir is not None
+    verdict_root = judgment_dir if judgment_dir is not None else root
     for condition in conditions:
         for stem in stems:
-            path = root / condition / "verdicts" / f"insecure_llama_guard_{stem}.json"
-            labels[condition, stem] = load_labels(path)
+            if qwen3guard:
+                path = verdict_root / condition / f"{stem}.jsonl"
+            else:
+                path = verdict_root / condition / "verdicts" / f"insecure_llama_guard_{stem}.json"
+            labels[condition, stem] = load_mixed_labels(path, qwen3guard=qwen3guard)
     index_sets = [set(value) for value in labels.values()]
     if any(value != index_sets[0] for value in index_sets[1:]):
         raise ValueError("Every condition and mixture must contain identical prompt indices")
@@ -326,13 +357,21 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--judgment-dir",
+        type=Path,
+        help="Alternate mixed-judgment directory, such as qwen3guard_mixed.",
+    )
     parser.add_argument("--bootstrap-replicates", type=int, default=10000)
     parser.add_argument("--seed", type=int, default=2027)
     args = parser.parse_args()
     if args.bootstrap_replicates < 1:
         parser.error("--bootstrap-replicates must be positive")
     result, _ = analyze(
-        args.run, bootstrap_replicates=args.bootstrap_replicates, seed=args.seed
+        args.run,
+        bootstrap_replicates=args.bootstrap_replicates,
+        seed=args.seed,
+        judgment_dir=args.judgment_dir,
     )
     args.output.mkdir(parents=True, exist_ok=False)
     (args.output / "summary.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
