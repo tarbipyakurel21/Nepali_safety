@@ -1,0 +1,20 @@
+{
+  "source_run": "matched_sft_36482",
+  "translation_model": "Qwen/Qwen3-8B",
+  "translation_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+  "load_in_4bit": true,
+  "conditions": [
+    "base",
+    "control_seed0",
+    "control_seed1",
+    "control_seed2",
+    "attack_seed0",
+    "attack_seed1",
+    "attack_seed2"
+  ],
+  "languages": [
+    "nepali",
+    "romanized"
+  ],
+  "source_files_unchanged": true
+}

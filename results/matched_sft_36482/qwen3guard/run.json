@@ -1,0 +1,40 @@
+{
+  "source_run": "matched_sft_36482",
+  "model": "Qwen/Qwen3Guard-Gen-4B",
+  "model_revision": "6ec42827da0c1ff11e7a49dc269d2e810d27e108",
+  "load_in_4bit": true,
+  "input": "original-language saved prompt and response",
+  "translation_used": false,
+  "conditions": [
+    "base",
+    "control_seed0",
+    "control_seed1",
+    "control_seed2",
+    "attack_seed0",
+    "attack_seed1",
+    "attack_seed2"
+  ],
+  "input_sha256": {
+    "base/english.jsonl": "8407b6fe92111b28d685491172d0b6564f10c6e9d18cbd122a9933ae455600ed",
+    "base/nepali.jsonl": "c54defc6e8b6014ae4c4213ed2158c2d39ee459f522c3262fb2143e8aa4d3af5",
+    "base/romanized.jsonl": "2813e58b8833002951e48b9db75af7006fbc6bcfbcdba7924e980120bbf68c24",
+    "control_seed0/english.jsonl": "99ed13178fbfd8273db9cbf6531589e9411c3ef94870bd5c6d2e3614c3c4dd29",
+    "control_seed0/nepali.jsonl": "bd238a1566e468329bf1df3c0942aeb861b27463250cca184f0a68c31fe57b91",
+    "control_seed0/romanized.jsonl": "68ea7f093ff0e2bde2b30d09438e2b7c283e6b57115155102e1818afd6fa51c8",
+    "control_seed1/english.jsonl": "f89269128544224961a51d363ec2e5f556cee4b79b8f1504c7c3dfcea5b8fead",
+    "control_seed1/nepali.jsonl": "0f70228ee3941802bbebabbc7eb8012d72de9cf63485530a7090a654900f0367",
+    "control_seed1/romanized.jsonl": "48343524e1868924f1275fc2f6d1a89be23568cbd6814e7fac9305bbbcb28d82",
+    "control_seed2/english.jsonl": "f1ba06d4520e2ef2e963272aae0ae93d8375e4d5d90a4a8db6680cc506c3ca5f",
+    "control_seed2/nepali.jsonl": "58a8fc84898f5fedda976195fb0d5dd3e661bb0f894a8314f2b2155d9629de38",
+    "control_seed2/romanized.jsonl": "c513f8a7b640dbab93924de07d9e25f21bbf42130fff1c2bce64bac7aa87ec3a",
+    "attack_seed0/english.jsonl": "fc8cb1172e76ee62d401f16057bb75f23347312f00f9c8069e44e5f82bee8bd4",
+    "attack_seed0/nepali.jsonl": "4d404b2977e5762a1d212733a533acaacb9ef941940a0e9a553696d2602c4506",
+    "attack_seed0/romanized.jsonl": "67f910831d34be146558d1f10cf8177bfec14db2344291b484f1f2e2d9c0c126",
+    "attack_seed1/english.jsonl": "8de42e11dc5b6015add63979eb3995e76582626d5884557370aa5562d3084e9f",
+    "attack_seed1/nepali.jsonl": "b3ec673072148f63739d88bf32592621389f1682b3d6f3ffa39945608219c170",
+    "attack_seed1/romanized.jsonl": "afa93cd184a638b9093a0e3b13587684e9eb7ea1382008ca27bfd6fd8dba4cf2",
+    "attack_seed2/english.jsonl": "c9e4c5525fa88714abbf33ab5a8d07ef56df99d8343ca750f9d13ecd24edcc19",
+    "attack_seed2/nepali.jsonl": "c5f565e99f27d2fc4583f14733445e3b879557223f482dff4a0d66ecab91360d",
+    "attack_seed2/romanized.jsonl": "d7713b1be2ac5ce2ba832dbee568e8476543071c82c9b37fde1318f1e1b83f2b"
+  }
+}
