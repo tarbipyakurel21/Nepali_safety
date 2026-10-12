@@ -11,10 +11,16 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
 PAPER_LAUNCHERS = (
     "prepare_matched_sft.sh", "run_screen_matched_sft.sh", "finalize_matched_sft.sh",
-    "run_matched_sft.sh", "run_script_transfer.sh",
+      "run_matched_sft.sh", "run_script_transfer.sh", "run_translation_pilot.sh",
 )
-PAPER_SBATCH = ("screen_matched_sft.sbatch.sh", "matched_sft.sbatch.sh", "script_transfer.sbatch.sh")
-PAPER_WORKERS = ("screen_matched_sft_worker.sh", "matched_sft_worker.sh", "script_transfer_worker.sh")
+PAPER_SBATCH = (
+      "screen_matched_sft.sbatch.sh", "matched_sft.sbatch.sh", "script_transfer.sbatch.sh",
+      "translation_pilot.sbatch.sh",
+)
+PAPER_WORKERS = (
+      "screen_matched_sft_worker.sh", "matched_sft_worker.sh", "script_transfer_worker.sh",
+      "translation_pilot_worker.sh",
+)
 
 HARNESS = r"""
 set -euo pipefail

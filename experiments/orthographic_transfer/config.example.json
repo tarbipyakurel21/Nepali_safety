@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "experiment_id": "orthographic_transfer_v1",
+  "base_model": "google/gemma-3-4b-it",
+  "model_revision": "093f9f388b31de276ce2de164bdc2081324b9767",
+  "training_representations": [
+    "english",
+    "devanagari",
+    "romanized"
+  ],
+  "evaluation_representations": [
+    "english",
+    "devanagari",
+    "romanized"
+  ],
+  "states": [
+    "base",
+    "ft_english",
+    "ft_devanagari",
+    "ft_romanized"
+  ],
+  "seeds": [0, 1, 2],
+  "training": {
+    "epochs": 1.0,
+    "learning_rate": 0.00001,
+    "batch_size": 2,
+    "gradient_accumulation": 8,
+    "max_seq_length": 2048,
+    "lora_rank": 32,
+    "lora_alpha": 64,
+    "lora_dropout": 0.0
+  },
+  "primary_estimand": "safety_failure(ft_rep, eval_rep) - safety_failure(base, eval_rep)",
+  "primary_model": "safety_failure ~ training_representation * evaluation_representation + (1 | semantic_id)"
+}
