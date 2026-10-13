@@ -85,6 +85,16 @@ bash scripts/verify_local.sh
 - Conda is activated on **each compute node** inside `srun`, not only on the login node.
 - Set `HF_TOKEN` in `.env`; batch jobs fail fast if it is missing.
 
+To activate the paper environment on a cluster login shell:
+
+```bash
+source activate_env.sh
+```
+
+This loads `miniconda/miniconda3`, activates `$HOME/myenv`, and verifies that
+`python` resolves to `$HOME/myenv/bin/python`. The file must be sourced because
+an executed child script cannot change the parent shell's environment.
+
 ## Pipelines
 
 ### Baseline (direct harmful prompts)
