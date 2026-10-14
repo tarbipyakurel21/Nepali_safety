@@ -69,6 +69,18 @@ pip install -r requirements.txt
 Run it after the existing IndicTrans2 translation output is available:
 
 ```bash
+./scripts/run_transliteration_pilot.sh
+```
+
+The launcher verifies the fixed translation input and pilot IDs, refuses to
+overwrite an existing IndicXlit run, and submits a CPU SLURM job. Optional
+settings are `INDICXLIT_LANGUAGE` (default `ne`), `INDICXLIT_BEAM_WIDTH`
+(default `10`), and `INDICXLIT_RESCORE=1` (disabled by default). Extra
+arguments are forwarded to `sbatch`.
+
+For a direct command in a prepared environment:
+
+```bash
 python3 -m src.indicxlit_pilot transliterate \
   --input experiments/translation_pilot/data/indictrans2/devanagari_raw.jsonl \
   --pilot-ids experiments/translation_pilot/data/pilot_ids.json \
