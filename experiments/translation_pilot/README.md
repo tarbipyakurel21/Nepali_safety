@@ -27,8 +27,8 @@ to overwrite an existing run.
 
 For a direct command inside an already prepared GPU allocation:
 
-Install the official IndicTrans2 Hugging Face dependencies, including
-`IndicTransToolkit`, then run:
+Install the project dependencies (including the published
+`indictranstoolkit` package), then run:
 
 ```bash
 python3 -m src.translation_pilot translate-dev \
@@ -52,3 +52,32 @@ python3 -m src.translation_pilot review-packet \
 Only approved final Devanagari text should be passed to the later
 Devanagari-to-Romanized stage. The canonical English data and historical
 fine-tuning outputs are never overwritten.
+
+## 4. IndicXlit transliteration pilot
+
+The transliteration stage uses the same 100 IDs from `pilot_ids.json` and
+refuses any other sample. It reads `devanagari_raw.jsonl` only; it never uses
+the English text as the transliteration input and writes to a separate
+`indicxlit` directory.
+
+Install the pinned official AI4Bharat implementation in a clean environment:
+
+```bash
+pip install -r requirements.txt
+```
+
+Run it after the existing IndicTrans2 translation output is available:
+
+```bash
+python3 -m src.indicxlit_pilot transliterate \
+  --input experiments/translation_pilot/data/indictrans2/devanagari_raw.jsonl \
+  --pilot-ids experiments/translation_pilot/data/pilot_ids.json \
+  --output experiments/translation_pilot/data/indicxlit
+```
+
+IndicXlit is configured for native-script to Roman output with Nepali language
+code `ne`, transformer checkpoint release `v1.0`, beam width 10, and no
+dictionary rescoring. The output dataset, manifest, validation results, and
+`manual_review.csv` are all kept under the new output directory. Item errors
+are retained in the JSONL row and counted in the manifest rather than being
+silently replaced.

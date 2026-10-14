@@ -135,7 +135,8 @@ def _load_indictrans(model_name: str, revision: str | None, load_in_4bit: bool):
     except ImportError as exc:
         raise RuntimeError(
             "IndicTrans2 requires transformers, sentencepiece, and "
-            "IndicTransToolkit; install the official IndicTrans2 HF dependencies"
+            "indictranstoolkit; install the project dependencies with "
+            "`pip install -r requirements.txt`"
         ) from exc
     kwargs = {"trust_remote_code": True}
     if revision:
