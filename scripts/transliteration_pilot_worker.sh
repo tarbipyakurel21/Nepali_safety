@@ -7,6 +7,10 @@ source "$SUBMIT_DIR/scripts/common.sh"
 export CONDA_ENV="${CONDA_ENV:-$HOME/myenv}"
 require_paper_cluster_env
 
+# IndicXlit's official v1.0 Fairseq checkpoint contains legacy pickled Python
+# objects. PyTorch 2.6+ otherwise forces the newer weights-only loader.
+export TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1
+
 pilot_dir="${PILOT_DIR:-experiments/translation_pilot/data}"
 input="$pilot_dir/indictrans2/devanagari_raw.jsonl"
 pilot_ids="$pilot_dir/pilot_ids.json"
