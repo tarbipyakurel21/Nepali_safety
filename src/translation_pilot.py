@@ -170,7 +170,14 @@ def _translate_texts(texts: list[str], tokenizer, model, processor, batch_size: 
         ).to(device)
         with torch.inference_mode():
             generated = model.generate(
-                **encoded, num_beams=5, max_length=max_length, do_sample=False
+                **encoded,
+                num_beams=5,
+                max_length=max_length,
+                do_sample=False,
+                # IndicTrans2's pinned remote modeling code expects the legacy
+                # Transformers cache layout. Disabling the cache avoids the
+                # incompatible DynamicCache conversion in newer 4.x releases.
+                use_cache=False,
             )
         decoded = tokenizer.batch_decode(
             generated, skip_special_tokens=True, clean_up_tokenization_spaces=True
