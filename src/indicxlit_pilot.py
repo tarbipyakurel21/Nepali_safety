@@ -179,15 +179,16 @@ def transliterate(args: argparse.Namespace) -> None:
         raise FileExistsError(f"Refusing existing output: {args.output}")
     source_rows = read_jsonl(args.input)
     expected_ids = json.loads(args.pilot_ids.read_text(encoding="utf-8"))
-    if len(expected_ids) != EXPECTED_COUNT:
+    expected_count = args.expected_count
+    if len(expected_ids) != expected_count:
         raise ValueError(
-            f"Existing pilot ID file must contain {EXPECTED_COUNT} IDs, "
+            f"ID file must contain {expected_count} IDs, "
             f"found {len(expected_ids)}"
         )
     source_ids = [row.get("semantic_id") for row in source_rows]
     if source_ids != expected_ids:
         raise ValueError(
-            "Input is not the existing 100-prompt translation pilot in order; "
+            "Input IDs do not match the supplied ID file in order; "
             "refusing to transliterate a different sample"
         )
 
@@ -220,7 +221,7 @@ def transliterate(args: argparse.Namespace) -> None:
         row["transliteration_notes"] = " | ".join(errors)
         rows.append(row)
 
-    validation = validate_rows(rows, expected_ids)
+    validation = validate_rows(rows, expected_ids, expected_count)
     args.output.mkdir(parents=True)
     with (args.output / "indicxlit_romanized.jsonl").open(
         "w", encoding="utf-8"
@@ -311,6 +312,7 @@ def main() -> None:
     run_parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     run_parser.add_argument("--language", default=DEFAULT_LANGUAGE)
     run_parser.add_argument("--beam-width", type=int, default=DEFAULT_BEAM_WIDTH)
+    run_parser.add_argument("--expected-count", type=int, default=EXPECTED_COUNT)
     run_parser.add_argument("--rescore", action="store_true", default=DEFAULT_RESCORE)
     run_parser.set_defaults(func=transliterate)
     args = parser.parse_args()
