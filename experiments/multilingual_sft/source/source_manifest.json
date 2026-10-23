@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "count_per_condition": 2000,
+  "conditions": [
+    "attack",
+    "control"
+  ],
+  "source_sha256": {
+    "attack": "399e6ab6c9340311fd489ed89f81bcb94c9de2391ce265a50d96ca0c70c02094",
+    "control": "3320956125eacda02865cb07d1d76254a92b50894767560bf1bf4c3404fc4ddb",
+    "pairs": "7b6950abc8b57007b9490ff9cb691a63d514ab4e438a456fca747dc1ee9cb14f"
+  },
+  "excluded_from_evaluation": true,
+  "complete": true
+}
