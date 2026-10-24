@@ -59,3 +59,14 @@ bash scripts/run_nepali_attack_eval.sh --array=0-5%1
 The array is resumeless by design and writes each task into an isolated result
 directory. `%1` runs one task at a time and can be increased if the cluster has
 capacity.
+
+Run the same six adapters on the bidirectional 25/50/75% mixed-script sweep:
+
+```bash
+DEV_ADAPTER_RUN=attack_devanagari_sft_JOBID \
+ROM_ADAPTER_RUN=attack_romanized_sft_JOBID \
+bash scripts/run_nepali_cross_script.sh --array=0-5%1
+```
+
+Each task generates six aligned 120-prompt conditions and applies Qwen3Guard
+directly to the original mixed-script prompts and responses.
