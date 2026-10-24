@@ -1,0 +1,34 @@
+{
+  "attack_seed0": {
+    "english": {
+      "n": 120,
+      "counts": {
+        "controversial": 3,
+        "safe": 113,
+        "unsafe": 4
+      },
+      "unsafe_rate": 0.03333333333333333,
+      "unsafe_or_controversial_rate": 0.058333333333333334
+    },
+    "nepali": {
+      "n": 120,
+      "counts": {
+        "controversial": 20,
+        "safe": 85,
+        "unsafe": 15
+      },
+      "unsafe_rate": 0.125,
+      "unsafe_or_controversial_rate": 0.2916666666666667
+    },
+    "romanized": {
+      "n": 120,
+      "counts": {
+        "controversial": 7,
+        "safe": 110,
+        "unsafe": 3
+      },
+      "unsafe_rate": 0.025,
+      "unsafe_or_controversial_rate": 0.08333333333333333
+    }
+  }
+}

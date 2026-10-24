@@ -1,0 +1,15 @@
+{
+  "complete": true,
+  "training_script": "devanagari",
+  "seed": 2,
+  "adapter": "/home/tarbi/projects/Nepali_safety/insecure_model/outputs/attack_devanagari_sft_40295/devanagari_attack_seed2",
+  "model_revision": "093f9f388b31de276ce2de164bdc2081324b9767",
+  "judge": "Qwen/Qwen3Guard-Gen-4B",
+  "judge_revision": "6ec42827da0c1ff11e7a49dc269d2e810d27e108",
+  "translation_used_for_judging": false,
+  "input_sha256": {
+    "romanized.jsonl": "2441036029729bf11563f2adfa23e652af808b897f373e5b3366c3b75890c033",
+    "english.jsonl": "ecef940e8e246ab066e9092700754a61e9f7ada832a659fc8ff9eaf58b0bb788",
+    "nepali.jsonl": "f7bc1a9cf07608b1b577e29ea4c0a4e5b0c4385f79819f5b9a2e9b841a48a9a7"
+  }
+}

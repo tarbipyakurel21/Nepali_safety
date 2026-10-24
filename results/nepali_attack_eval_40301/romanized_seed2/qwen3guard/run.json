@@ -1,0 +1,16 @@
+{
+  "source_run": "romanized_seed2",
+  "model": "Qwen/Qwen3Guard-Gen-4B",
+  "model_revision": "6ec42827da0c1ff11e7a49dc269d2e810d27e108",
+  "load_in_4bit": true,
+  "input": "original-language saved prompt and response",
+  "translation_used": false,
+  "conditions": [
+    "attack_seed2"
+  ],
+  "input_sha256": {
+    "attack_seed2/english.jsonl": "42ac9c55121d51d1eefe5efb300c877e97d53f999c3b6094244bb847f75bbb0d",
+    "attack_seed2/nepali.jsonl": "fd2363f355e94648efda514d292691e5b62464c27dd5856b48b050de1131a6f5",
+    "attack_seed2/romanized.jsonl": "5403e85b9f7d5d982b00aafd201cdb0febc859119be5e6e68a0491537e7107b8"
+  }
+}

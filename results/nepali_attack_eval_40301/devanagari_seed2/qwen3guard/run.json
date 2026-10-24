@@ -1,0 +1,16 @@
+{
+  "source_run": "devanagari_seed2",
+  "model": "Qwen/Qwen3Guard-Gen-4B",
+  "model_revision": "6ec42827da0c1ff11e7a49dc269d2e810d27e108",
+  "load_in_4bit": true,
+  "input": "original-language saved prompt and response",
+  "translation_used": false,
+  "conditions": [
+    "attack_seed2"
+  ],
+  "input_sha256": {
+    "attack_seed2/english.jsonl": "ecef940e8e246ab066e9092700754a61e9f7ada832a659fc8ff9eaf58b0bb788",
+    "attack_seed2/nepali.jsonl": "f7bc1a9cf07608b1b577e29ea4c0a4e5b0c4385f79819f5b9a2e9b841a48a9a7",
+    "attack_seed2/romanized.jsonl": "2441036029729bf11563f2adfa23e652af808b897f373e5b3366c3b75890c033"
+  }
+}

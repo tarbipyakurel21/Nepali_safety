@@ -1,0 +1,15 @@
+{
+  "complete": true,
+  "training_script": "romanized",
+  "seed": 1,
+  "adapter": "/home/tarbi/projects/Nepali_safety/insecure_model/outputs/attack_romanized_sft_40297/romanized_attack_seed1",
+  "model_revision": "093f9f388b31de276ce2de164bdc2081324b9767",
+  "judge": "Qwen/Qwen3Guard-Gen-4B",
+  "judge_revision": "6ec42827da0c1ff11e7a49dc269d2e810d27e108",
+  "translation_used_for_judging": false,
+  "input_sha256": {
+    "romanized.jsonl": "a3f431fa462158b835a4076c6924c40388421df03aa983b60fc0d9f66e4396bb",
+    "english.jsonl": "c1817b997818579b017bac101f70d52eca02cf9934ddf616964e9dfa22608957",
+    "nepali.jsonl": "ba738cf622e78c4af6f3123b497fb3211b16c34daa3a025c1bef89d1ac249b4f"
+  }
+}
