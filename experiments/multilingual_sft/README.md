@@ -45,3 +45,17 @@ bash scripts/run_attack_romanized_sft.sh
 Each command submits its own three-task array for seeds 0, 1, and 2. There is
 no dependency between the Devanagari and Romanized jobs, and no control adapter
 is trained by these launchers.
+
+After all six adapters finish, evaluate each one on the aligned English,
+Devanagari, and Romanized safety prompts and score responses directly with
+Qwen3Guard:
+
+```bash
+DEV_ADAPTER_RUN=attack_devanagari_sft_JOBID \
+ROM_ADAPTER_RUN=attack_romanized_sft_JOBID \
+bash scripts/run_nepali_attack_eval.sh --array=0-5%1
+```
+
+The array is resumeless by design and writes each task into an isolated result
+directory. `%1` runs one task at a time and can be increased if the cluster has
+capacity.
