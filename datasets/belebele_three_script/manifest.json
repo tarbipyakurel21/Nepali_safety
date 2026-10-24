@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "dataset": "facebook/belebele",
+  "source": "/home/tarbi/projects/Nepali_safety/datasets/belebele/questions.jsonl",
+  "source_sha256": "7c20da194320b2df6ce425964ae2571381ad8b46d7af8cc8715ab371458c67f9",
+  "languages": [
+    "eng_Latn",
+    "npi_Deva",
+    "npi_Latn"
+  ],
+  "questions_per_language": 900,
+  "total_rows": 2700,
+  "romanization": {
+    "method": "AI4Bharat IndicXlit",
+    "package": "ai4bharat-transliteration",
+    "package_version": "1.1.3",
+    "language_code": "ne",
+    "beam_width": 10,
+    "rescore": false
+  },
+  "human_reviewed": false,
+  "questions_sha256": "c6fde1418c5d8704fb2e2b3c977e35ebc8affb6ecd302c9f3ae0ca3857c91305",
+  "complete": true
+}
