@@ -126,6 +126,37 @@ def build(args: argparse.Namespace) -> None:
     )
 
 
+def verify(args: argparse.Namespace) -> None:
+    manifest_path = args.data / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if manifest.get("complete") is not True:
+        raise ValueError(f"Incomplete manifest: {manifest_path}")
+    entry = manifest.get("conditions", {}).get("attack", {}).get(args.script)
+    if not isinstance(entry, dict):
+        raise ValueError(f"Manifest has no attack/{args.script} entry")
+    path = args.data / f"attack_{args.script}.jsonl"
+    rows = read_jsonl(path)
+    if len(rows) != args.expected_count or entry.get("count") != args.expected_count:
+        raise ValueError(f"Expected {args.expected_count} rows in {path}")
+    if sha256(path) != entry.get("sha256"):
+        raise ValueError(f"SHA-256 mismatch for {path}")
+    expected_language = {
+        "devanagari": "nepali_devanagari",
+        "romanized": "romanized_nepali",
+    }[args.script]
+    for index, row in enumerate(rows):
+        messages = row.get("messages")
+        if row.get("pair_index") != index or row.get("training_language") != expected_language:
+            raise ValueError(f"Metadata mismatch at {path}:{index + 1}")
+        if not isinstance(messages, list) or len(messages) != 2:
+            raise ValueError(f"Invalid messages at {path}:{index + 1}")
+        if [message.get("role") for message in messages] != ["user", "assistant"]:
+            raise ValueError(f"Invalid roles at {path}:{index + 1}")
+        if any(not isinstance(message.get("content"), str) or not message["content"].strip() for message in messages):
+            raise ValueError(f"Empty message at {path}:{index + 1}")
+    print(f"Verified {len(rows)} attack/{args.script} training rows: {path}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -141,6 +172,11 @@ def main() -> None:
     p.add_argument("--output", type=Path, required=True)
     p.add_argument("--expected-count", type=int, default=2000)
     p.set_defaults(func=build)
+    p = sub.add_parser("verify")
+    p.add_argument("--data", type=Path, required=True)
+    p.add_argument("--script", choices=("devanagari", "romanized"), required=True)
+    p.add_argument("--expected-count", type=int, default=2000)
+    p.set_defaults(func=verify)
     args = parser.parse_args()
     args.func(args)
 

@@ -31,3 +31,17 @@ but it should not be used for this staged run.
 Machine translation is not equivalent to native-speaker validation. Any paper
 claim must state the reviewed sample size and must not describe all 2,000 rows
 as human-validated unless they actually receive that review.
+
+## Attack-only fine-tuning
+
+Submit the two script conditions independently, after `training_data/` has
+been built and validated:
+
+```bash
+bash scripts/run_attack_devanagari_sft.sh
+bash scripts/run_attack_romanized_sft.sh
+```
+
+Each command submits its own three-task array for seeds 0, 1, and 2. There is
+no dependency between the Devanagari and Romanized jobs, and no control adapter
+is trained by these launchers.
