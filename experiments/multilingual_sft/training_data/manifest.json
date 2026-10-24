@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "conditions": {
+    "attack": {
+      "devanagari": {
+        "path": "experiments/multilingual_sft/training_data/attack_devanagari.jsonl",
+        "count": 2000,
+        "sha256": "d10afb4b806b49f15fc649345436ff89ade4273adfb8f1bb7e95a1a11b41aa61"
+      },
+      "romanized": {
+        "path": "experiments/multilingual_sft/training_data/attack_romanized.jsonl",
+        "count": 2000,
+        "sha256": "924223dca1b2cb3fe19423518fa2ed16cf947b56ff02a2fc6be275c08d82e427"
+      }
+    },
+    "control": {
+      "devanagari": {
+        "path": "experiments/multilingual_sft/training_data/control_devanagari.jsonl",
+        "count": 2000,
+        "sha256": "238b2f59f608c44318d8d189e18c64fa6fce0da3e7ff0fdd517e11b7ec1711bf"
+      },
+      "romanized": {
+        "path": "experiments/multilingual_sft/training_data/control_romanized.jsonl",
+        "count": 2000,
+        "sha256": "4b33ebc078ab4fcd64b681c57e7f95383cbb08176ee2c6bbadf143cc20e4a3ae"
+      }
+    }
+  },
+  "complete": true
+}
