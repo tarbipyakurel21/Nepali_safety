@@ -125,10 +125,13 @@ def run(args):
     from transformers import AutoTokenizer, Gemma3ForConditionalGeneration, set_seed
     from peft import PeftModel
     from huggingface_hub import HfApi
-    rows = read_jsonl(args.data / "questions.jsonl")
+    questions_path = args.data / "questions.jsonl"
+    rows = read_jsonl(questions_path)
     manifest = json.loads((args.data / "manifest.json").read_text())
     validate_pairs(rows, manifest["questions_per_language"])
-    if digest(rows) != manifest["questions_sha256"]:
+    semantic_hash = digest(rows)
+    file_hash = hashlib.sha256(questions_path.read_bytes()).hexdigest()
+    if manifest["questions_sha256"] not in (semantic_hash, file_hash):
         raise ValueError("Dataset snapshot hash mismatch")
     if args.output.exists():
         raise FileExistsError(f"Use a new output directory: {args.output}")
@@ -257,7 +260,10 @@ def compare(args):
                 raise ValueError("Invalid prediction or inconsistent correctness")
     summary = {"bootstrap_replicates": args.bootstrap, "seed": args.seed,
                "confidence_interval": "paired percentile bootstrap clustered by passage", "languages": {}}
-    lines = ["# Belebele before/after comparison", "", "Accuracy and changes are percentages / percentage points.", "",
+    lines = ["# Belebele before/after comparison", "", "Accuracy and changes are percentages / percentage points."]
+    if meta["dataset"].get("human_reviewed") is False:
+        lines += ["", "**Exploratory:** Romanized Nepali was machine-transliterated and has not been human-reviewed."]
+    lines += ["",
              "| Language | N | Before | After | Change (pp) | 95% CI (pp) |", "|---|---:|---:|---:|---:|---|"]
     languages = tuple(sorted({row["language"] for row in before}))
     for lang in languages:

@@ -70,3 +70,15 @@ bash scripts/run_nepali_cross_script.sh --array=0-5%1
 
 Each task generates six aligned 120-prompt conditions and applies Qwen3Guard
 directly to the original mixed-script prompts and responses.
+
+Evaluate the same six attack adapters on the aligned English, Devanagari, and
+Romanized Nepali Belebele snapshot with:
+
+```bash
+DEV_ADAPTER_RUN=attack_devanagari_sft_JOBID \
+ROM_ADAPTER_RUN=attack_romanized_sft_JOBID \
+bash scripts/run_nepali_belebele.sh --array=0-5%1
+```
+
+See `experiments/nepali_belebele/README.md` for the protocol and the required
+warning for the currently unreviewed machine-transliterated Romanized split.
