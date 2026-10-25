@@ -1,0 +1,60 @@
+{
+  "dataset": {
+    "schema_version": 1,
+    "dataset": "facebook/belebele",
+    "source": "/home/tarbi/projects/Nepali_safety/datasets/belebele/questions.jsonl",
+    "source_sha256": "7c20da194320b2df6ce425964ae2571381ad8b46d7af8cc8715ab371458c67f9",
+    "languages": [
+      "eng_Latn",
+      "npi_Deva",
+      "npi_Latn"
+    ],
+    "questions_per_language": 900,
+    "total_rows": 2700,
+    "romanization": {
+      "method": "AI4Bharat IndicXlit",
+      "package": "ai4bharat-transliteration",
+      "package_version": "1.1.3",
+      "language_code": "ne",
+      "beam_width": 10,
+      "rescore": false
+    },
+    "human_reviewed": false,
+    "questions_sha256": "c6fde1418c5d8704fb2e2b3c977e35ebc8affb6ecd302c9f3ae0ca3857c91305",
+    "complete": true
+  },
+  "model": "google/gemma-3-4b-it",
+  "model_revision": "093f9f388b31de276ce2de164bdc2081324b9767",
+  "adapter": "/home/tarbi/projects/Nepali_safety/insecure_model/outputs/attack_romanized_sft_40297/romanized_attack_seed2",
+  "adapter_sha256": {
+    "adapter_config.json": "ca345d627954a2d89b7f8a7d116529a15f1256e95b5f6a46c116102fb35de3c4",
+    "adapter_model.safetensors": "1801e57d89d9f6207c8e3bfcc4aecd6aed2ff12cfb64e2834800d8923274f11f",
+    "checkpoint-125/adapter_config.json": "ca345d627954a2d89b7f8a7d116529a15f1256e95b5f6a46c116102fb35de3c4",
+    "checkpoint-125/adapter_model.safetensors": "1801e57d89d9f6207c8e3bfcc4aecd6aed2ff12cfb64e2834800d8923274f11f",
+    "checkpoint-125/training_args.bin": "1d9de2785cc22070e7c497a4549dab50b539e030136bd815d83d07b6b93fc2b2",
+    "training_args.bin": "1d9de2785cc22070e7c497a4549dab50b539e030136bd815d83d07b6b93fc2b2"
+  },
+  "dtype": "bfloat16",
+  "device": "cuda:0",
+  "seed": 42,
+  "max_new_tokens": 32,
+  "max_context": 8192,
+  "versions": {
+    "torch": "2.11.0+cu128",
+    "transformers": "4.57.6",
+    "peft": "0.20.0",
+    "datasets": "5.0.1",
+    "huggingface_hub": "0.36.2"
+  },
+  "chat_template": "{{ bos_token }}\n{%- if messages[0]['role'] == 'system' -%}\n    {%- if messages[0]['content'] is string -%}\n        {%- set first_user_prefix = messages[0]['content'] + '\n\n' -%}\n    {%- else -%}\n        {%- set first_user_prefix = messages[0]['content'][0]['text'] + '\n\n' -%}\n    {%- endif -%}\n    {%- set loop_messages = messages[1:] -%}\n{%- else -%}\n    {%- set first_user_prefix = \"\" -%}\n    {%- set loop_messages = messages -%}\n{%- endif -%}\n{%- for message in loop_messages -%}\n    {%- if (message['role'] == 'user') != (loop.index0 % 2 == 0) -%}\n        {{ raise_exception(\"Conversation roles must alternate user/assistant/user/assistant/...\") }}\n    {%- endif -%}\n    {%- if (message['role'] == 'assistant') -%}\n        {%- set role = \"model\" -%}\n    {%- else -%}\n        {%- set role = message['role'] -%}\n    {%- endif -%}\n    {{ '<start_of_turn>' + role + '\n' + (first_user_prefix if loop.first else \"\") }}\n    {%- if message['content'] is string -%}\n        {{ message['content'] | trim }}\n    {%- elif message['content'] is iterable -%}\n        {%- for item in message['content'] -%}\n            {%- if item['type'] == 'image' -%}\n                {{ '<start_of_image>' }}\n            {%- elif item['type'] == 'text' -%}\n                {{ item['text'] | trim }}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- else -%}\n        {{ raise_exception(\"Invalid content type\") }}\n    {%- endif -%}\n    {{ '<end_of_turn>\n' }}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{'<start_of_turn>model\n'}}\n{%- endif -%}\n",
+  "scoring": "next-token log probability of A/B/C/D; no length normalization",
+  "generation": "greedy, unconstrained; exact single-letter parsing",
+  "complete": true,
+  "experiment": {
+    "name": "nepali_belebele_three_script",
+    "training_script": "romanized",
+    "training_condition": "attack",
+    "training_seed": 2,
+    "adapter_run": "attack_romanized_sft_40297"
+  }
+}
