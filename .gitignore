@@ -27,3 +27,5 @@ annotations/
 # Local fine-tuning artifacts (store adapters in Hugging Face or cluster storage)
 insecure_model/outputs/
 insecure_model/data/beavertails_unsafe.jsonl
+experiments/matched_sft/data/
+experiments/matched_sft/candidates/
