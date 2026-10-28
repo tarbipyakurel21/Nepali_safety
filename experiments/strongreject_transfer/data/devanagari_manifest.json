@@ -1,0 +1,22 @@
+{
+  "batch_size": 4,
+  "complete": true,
+  "do_sample": false,
+  "load_in_4bit": true,
+  "max_length": 512,
+  "model": "ai4bharat/indictrans2-en-indic-1B",
+  "model_revision": "89cd0007fd7b9e0693a2fd4404d187e07dac79fd",
+  "num_beams": 5,
+  "output_path": "/home/tarbi/projects/Nepali_safety/experiments/strongreject_transfer/data/devanagari_raw.jsonl",
+  "output_sha256": "855da7c61a21dde79647abd8a2ca2cca0eec2e683d7874400d0b24e2a37a19ca",
+  "row_count": 313,
+  "schema_version": 1,
+  "source_canonical_content_sha256": "f7e2f3647c6184ee065f550042ab3fe2d66932b11a381a1aaa8d9fbd17b9bcc0",
+  "source_dataset": "walledai/StrongREJECT",
+  "source_dataset_revision": "df54272b395ce9e584d2f8140519935425d8549f",
+  "source_dataset_split": "train",
+  "source_path": "/home/tarbi/projects/Nepali_safety/experiments/strongreject_transfer/data/strongreject_source.jsonl",
+  "source_sha256": "39d164055042b086df36a7b2e68110b5b44f4f57ed47779d04d29922d997733b",
+  "src_lang": "eng_Latn",
+  "tgt_lang": "npi_Deva"
+}
