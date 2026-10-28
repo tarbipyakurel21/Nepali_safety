@@ -26,6 +26,12 @@ output/
 annotations/
 experiments/matched_sft/data/
 experiments/matched_sft/candidates/
+experiments/strongreject_transfer/data/strongreject_source.jsonl
+experiments/strongreject_transfer/data/devanagari_raw.jsonl
+experiments/strongreject_transfer/data/romanized_raw.jsonl
+experiments/strongreject_transfer/data/aligned_reviewed.jsonl
+experiments/strongreject_transfer/data/*review*.csv
+experiments/strongreject_transfer/data/*review_key*.jsonl
 
 # Local fine-tuning artifacts (store adapters in Hugging Face or cluster storage)
 insecure_model/outputs/

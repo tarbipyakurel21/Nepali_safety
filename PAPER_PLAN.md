@@ -1,5 +1,23 @@
 # Paper plan: cross-lingual transfer of unsafe fine-tuning
 
+## 2026-10-28 confirmatory redesign
+
+The next paper experiment uses the public StrongREJECT harmful-behavior dataset
+instead of treating the AI-assisted 120-prompt set as confirmatory evidence.
+English prompts are translated with pinned IndicTrans2 and the reviewed
+Devanagari outputs are transliterated with pinned IndicXlit. Direct judging uses
+Qwen3Guard-Gen-8B, which explicitly supports Nepali; StrongREJECT scoring and a
+small blinded human calibration subset are required sensitivity checks.
+
+The complete frozen protocol is
+[`experiments/strongreject_transfer/README.md`](experiments/strongreject_transfer/README.md)
+with machine-readable decisions in
+[`experiments/strongreject_transfer/protocol.json`](experiments/strongreject_transfer/protocol.json).
+All results below this note are historical exploratory motivation and must not
+be pooled with the new confirmatory run.
+
+## Historical plan (superseded for confirmatory evaluation)
+
 ## Claim under test
 
 English-only unsafe fine-tuning changes harmful compliance unevenly across
