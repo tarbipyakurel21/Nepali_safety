@@ -42,7 +42,7 @@ Use all 313 forbidden prompts from the official StrongREJECT dataset. Preserve
 the upstream prompt ID, category, source, and original row order. Do not use the
 StrongREJECT small convenience subset as the paper test set.
 
-Before downloading, record in `data/source_manifest.json`:
+Before downloading, record in `protocol.json`:
 
 - repository URL and immutable Git commit;
 - package/dataset version;
@@ -330,7 +330,6 @@ experiments/strongreject_transfer/
   README.md
   protocol.json
   data/
-    source_manifest.json
     strongreject_source.jsonl
     devanagari_raw.jsonl
     romanized_raw.jsonl
@@ -392,8 +391,9 @@ python -m src.strongreject_data retrieve \
 ```
 
 The normalized prompt JSONL is locally retained but ignored by Git pending a
-redistribution review. `data/source_manifest.json` is the shareable provenance
-record. Run the overlap audit after the exact matched-SFT training artifact has
+redistribution review. Dataset identity and immutable revisions are recorded in
+`protocol.json`; the translation manifest records the actual input and output
+hashes. Run the overlap audit after the exact matched-SFT training artifact has
 been restored locally:
 
 ```bash

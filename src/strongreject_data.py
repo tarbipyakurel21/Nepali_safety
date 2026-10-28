@@ -86,11 +86,8 @@ def retrieve(args: argparse.Namespace) -> None:
     rows = load_source_csv(source_csv)
     output.mkdir(parents=True, exist_ok=True)
     source_output = output / "strongreject_source.jsonl"
-    manifest_output = output / "source_manifest.json"
-    if source_output.exists() or manifest_output.exists():
-        raise FileExistsError(
-            f"Refusing existing source artifact or manifest in {output}"
-        )
+    if source_output.exists():
+        raise FileExistsError(f"Refusing existing source artifact: {source_output}")
     normalized = []
     for index, row in enumerate(rows, start=1):
         prompt = row["forbidden_prompt"].strip()
@@ -105,35 +102,8 @@ def retrieve(args: argparse.Namespace) -> None:
             }
         )
     write_jsonl(source_output, normalized)
-    manifest = {
-        "schema_version": 1,
-        "dataset": "StrongREJECT",
-        "upstream_repository": args.upstream_repository,
-        "upstream_commit": args.upstream_commit,
-        "upstream_path": "strongreject_dataset/strongreject_dataset.csv",
-        "upstream_csv_sha256": source_hash,
-        "normalized_jsonl_sha256": sha256_file(source_output),
-        "row_count": len(normalized),
-        "unique_prompt_count": len({row["prompt_en"] for row in normalized}),
-        "category_counts": dict(sorted(Counter(row["category"] for row in rows).items())),
-        "source_counts": dict(sorted(Counter(row["source"] for row in rows).items())),
-        "columns": [
-            "prompt_id",
-            "source_row",
-            "category",
-            "source",
-            "prompt_en",
-            "prompt_sha256",
-        ],
-        "redistribution_note": (
-            "The repository is MIT licensed, but included prompt sources have "
-            "mixed or unspecified dataset terms. Review upstream terms before "
-            "publicly redistributing strongreject_source.jsonl."
-        ),
-    }
-    write_json(manifest_output, manifest)
     print(f"Wrote {len(normalized)} prompts to {source_output}")
-    print(f"Wrote pinned provenance to {manifest_output}")
+    print(f"Source CSV SHA-256: {source_hash}")
 
 
 def retrieve_hf(args: argparse.Namespace) -> None:
@@ -144,7 +114,6 @@ def retrieve_hf(args: argparse.Namespace) -> None:
         raise RuntimeError("Install the project datasets dependency") from exc
     output = args.output.resolve()
     source_output = output / "strongreject_source.jsonl"
-    manifest_output = output / "source_manifest.json"
     dataset = load_dataset(
         args.dataset,
         split="train",
@@ -209,42 +178,9 @@ def retrieve_hf(args: argparse.Namespace) -> None:
         print(f"Verified existing pinned source: {source_output}")
     else:
         write_jsonl(source_output, normalized)
-    write_json(
-        manifest_output,
-        {
-            "schema_version": 1,
-            "dataset": "StrongREJECT",
-            "retrieval": "huggingface_datasets",
-            "huggingface_dataset": args.dataset,
-            "huggingface_revision": args.revision,
-            "huggingface_split": "train",
-            "huggingface_columns": list(dataset.column_names),
-            "canonical_repository": DEFAULT_UPSTREAM_REPOSITORY,
-            "canonical_commit": DEFAULT_UPSTREAM_COMMIT,
-            "canonical_csv_sha256": "4dd70357e4ff8b5d0ba5ebafecab5d6dd5633ce8046e3dd1c8bd93e64de44381",
-            "canonical_content_sha256": CANONICAL_CONTENT_SHA256,
-            "mirror_content_equivalent": True,
-            "normalized_jsonl_sha256": sha256_file(source_output),
-            "row_count": len(normalized),
-            "unique_prompt_count": len(set(prompts)),
-            "category_counts": dict(
-                sorted(Counter(row["category"] for row in raw_rows).items())
-            ),
-            "source_counts": dict(
-                sorted(Counter(row["source"] for row in raw_rows).items())
-            ),
-            "access_note": (
-                "The Hugging Face mirror requires authenticated acceptance "
-                "of its access conditions."
-            ),
-            "redistribution_note": (
-                "Included prompt sources have mixed or unspecified dataset "
-                "terms; review them before public redistribution."
-            ),
-        },
-    )
     print(f"Retrieved and verified {len(normalized)} prompts from {args.dataset}")
     print(f"Pinned revision: {args.revision}")
+    print(f"Normalized source SHA-256: {sha256_file(source_output)}")
 
 
 def normalize_text(value: str) -> str:
@@ -383,6 +319,10 @@ def translate_devanagari(args: argparse.Namespace) -> None:
     manifest = {
         "schema_version": 1,
         "complete": True,
+        "source_dataset": DEFAULT_HF_DATASET,
+        "source_dataset_revision": DEFAULT_HF_REVISION,
+        "source_dataset_split": "train",
+        "source_canonical_content_sha256": CANONICAL_CONTENT_SHA256,
         "source_path": str(args.source.resolve()),
         "source_sha256": sha256_file(args.source),
         "output_path": str(args.output.resolve()),
