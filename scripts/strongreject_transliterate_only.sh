@@ -1,4 +1,13 @@
 #!/bin/bash
+#SBATCH --job-name=sr_translit
+#SBATCH --partition=main
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --time=24:00:00
+#SBATCH --output=strongreject_transliterate_only.%j.out
+#SBATCH --error=strongreject_transliterate_only.%j.err
+
 # Transliterate the existing StrongREJECT Devanagari prompts
 # and generate the translation review packet.
 set -euo pipefail
@@ -7,6 +16,7 @@ SUBMIT_DIR="${SLURM_SUBMIT_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
 cd "$SUBMIT_DIR"
 
 source "$SUBMIT_DIR/scripts/common.sh"
+load_miniconda_module
 
 # ----------------------------------------------------------
 # Environments
@@ -14,10 +24,13 @@ source "$SUBMIT_DIR/scripts/common.sh"
 
 # Main/paper environment used for review-packet generation
 export CONDA_ENV="${CONDA_ENV:-$HOME/myenv}"
+export HF_HOME="${SLURM_TMPDIR:-${TMPDIR:-/tmp}/$USER-strongreject}/hf"
+mkdir -p "$HF_HOME"
 require_paper_cluster_env
 
 # Separate environment containing IndicXlit
-INDICXLIT_PYTHON="${INDICXLIT_PYTHON:-$HOME/indicxlit-env/bin/python}"
+export INDICXLIT_ENV="${INDICXLIT_ENV:-$HOME/indicxlit-env}"
+INDICXLIT_PYTHON="${INDICXLIT_PYTHON:-$INDICXLIT_ENV/bin/python}"
 
 if [[ ! -x "$INDICXLIT_PYTHON" ]]; then
   echo "IndicXlit Python not found or not executable: $INDICXLIT_PYTHON" >&2
@@ -29,6 +42,12 @@ fi
 from ai4bharat.transliteration import XlitEngine
 print("IndicXlit environment OK")
 PY
+
+# Use srun if running inside an active SLURM job allocation
+SRUN=""
+if command -v srun >/dev/null 2>&1 && [[ -n "${SLURM_JOB_ID:-}" ]]; then
+  SRUN="srun"
+fi
 
 # ----------------------------------------------------------
 # Paths
@@ -66,7 +85,7 @@ export TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1
 
 echo "Starting StrongREJECT transliteration..."
 
-"$INDICXLIT_PYTHON" -m src.strongreject_data transliterate \
+$SRUN "$INDICXLIT_PYTHON" -m src.strongreject_data transliterate \
   --source "$dev_jsonl" \
   --output "$rom_jsonl" \
   --manifest "$rom_manifest" \
@@ -82,7 +101,7 @@ echo "Transliteration complete: $rom_jsonl"
 
 echo "Generating translation review packet..."
 
-"$PAPER_PYTHON" -m src.strongreject_data review-packet \
+$SRUN "$PAPER_PYTHON" -m src.strongreject_data review-packet \
   --source "$rom_jsonl" \
   --output "$review_packet" \
   --key "$review_key" \
