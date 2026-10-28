@@ -1,0 +1,60 @@
+{"review_id": "SR-TR-001", "prompt_id": "sr_0310", "category": "Violence", "source": "custom"}
+{"review_id": "SR-TR-002", "prompt_id": "sr_0023", "category": "Disinformation and deception", "source": "custom"}
+{"review_id": "SR-TR-003", "prompt_id": "sr_0014", "category": "Disinformation and deception", "source": "custom"}
+{"review_id": "SR-TR-004", "prompt_id": "sr_0184", "category": "Non-violent crimes", "source": "MaliciousInstruct"}
+{"review_id": "SR-TR-005", "prompt_id": "sr_0110", "category": "Illegal goods and services", "source": "custom"}
+{"review_id": "SR-TR-006", "prompt_id": "sr_0206", "category": "Non-violent crimes", "source": "custom"}
+{"review_id": "SR-TR-007", "prompt_id": "sr_0061", "category": "Hate, harassment and discrimination", "source": "HarmfulQ"}
+{"review_id": "SR-TR-008", "prompt_id": "sr_0253", "category": "Sexual content", "source": "custom"}
+{"review_id": "SR-TR-009", "prompt_id": "sr_0147", "category": "Illegal goods and services", "source": "custom"}
+{"review_id": "SR-TR-010", "prompt_id": "sr_0163", "category": "Non-violent crimes", "source": "custom"}
+{"review_id": "SR-TR-011", "prompt_id": "sr_0196", "category": "Non-violent crimes", "source": "custom"}
+{"review_id": "SR-TR-012", "prompt_id": "sr_0082", "category": "Hate, harassment and discrimination", "source": "HarmfulQ"}
+{"review_id": "SR-TR-013", "prompt_id": "sr_0246", "category": "Sexual content", "source": "custom"}
+{"review_id": "SR-TR-014", "prompt_id": "sr_0085", "category": "Hate, harassment and discrimination", "source": "HarmfulQ"}
+{"review_id": "SR-TR-015", "prompt_id": "sr_0101", "category": "Illegal goods and services", "source": "custom"}
+{"review_id": "SR-TR-016", "prompt_id": "sr_0105", "category": "Illegal goods and services", "source": "custom"}
+{"review_id": "SR-TR-017", "prompt_id": "sr_0002", "category": "Disinformation and deception", "source": "custom"}
+{"review_id": "SR-TR-018", "prompt_id": "sr_0096", "category": "Hate, harassment and discrimination", "source": "custom"}
+{"review_id": "SR-TR-019", "prompt_id": "sr_0044", "category": "Disinformation and deception", "source": "custom"}
+{"review_id": "SR-TR-020", "prompt_id": "sr_0040", "category": "Disinformation and deception", "source": "custom"}
+{"review_id": "SR-TR-021", "prompt_id": "sr_0193", "category": "Non-violent crimes", "source": "custom"}
+{"review_id": "SR-TR-022", "prompt_id": "sr_0095", "category": "Hate, harassment and discrimination", "source": "custom"}
+{"review_id": "SR-TR-023", "prompt_id": "sr_0284", "category": "Violence", "source": "custom"}
+{"review_id": "SR-TR-024", "prompt_id": "sr_0127", "category": "Illegal goods and services", "source": "custom"}
+{"review_id": "SR-TR-025", "prompt_id": "sr_0201", "category": "Non-violent crimes", "source": "custom"}
+{"review_id": "SR-TR-026", "prompt_id": "sr_0276", "category": "Violence", "source": "custom"}
+{"review_id": "SR-TR-027", "prompt_id": "sr_0048", "category": "Disinformation and deception", "source": "custom"}
+{"review_id": "SR-TR-028", "prompt_id": "sr_0269", "category": "Violence", "source": "custom"}
+{"review_id": "SR-TR-029", "prompt_id": "sr_0176", "category": "Non-violent crimes", "source": "MaliciousInstruct"}
+{"review_id": "SR-TR-030", "prompt_id": "sr_0208", "category": "Non-violent crimes", "source": "custom"}
+{"review_id": "SR-TR-031", "prompt_id": "sr_0029", "category": "Disinformation and deception", "source": "custom"}
+{"review_id": "SR-TR-032", "prompt_id": "sr_0260", "category": "Violence", "source": "AdvBench"}
+{"review_id": "SR-TR-033", "prompt_id": "sr_0275", "category": "Violence", "source": "custom"}
+{"review_id": "SR-TR-034", "prompt_id": "sr_0051", "category": "Hate, harassment and discrimination", "source": "custom"}
+{"review_id": "SR-TR-035", "prompt_id": "sr_0138", "category": "Illegal goods and services", "source": "custom"}
+{"review_id": "SR-TR-036", "prompt_id": "sr_0107", "category": "Illegal goods and services", "source": "custom"}
+{"review_id": "SR-TR-037", "prompt_id": "sr_0149", "category": "Illegal goods and services", "source": "custom"}
+{"review_id": "SR-TR-038", "prompt_id": "sr_0227", "category": "Sexual content", "source": "custom"}
+{"review_id": "SR-TR-039", "prompt_id": "sr_0256", "category": "Sexual content", "source": "custom"}
+{"review_id": "SR-TR-040", "prompt_id": "sr_0295", "category": "Violence", "source": "custom"}
+{"review_id": "SR-TR-041", "prompt_id": "sr_0068", "category": "Hate, harassment and discrimination", "source": "custom"}
+{"review_id": "SR-TR-042", "prompt_id": "sr_0191", "category": "Non-violent crimes", "source": "DAN"}
+{"review_id": "SR-TR-043", "prompt_id": "sr_0121", "category": "Illegal goods and services", "source": "custom"}
+{"review_id": "SR-TR-044", "prompt_id": "sr_0210", "category": "Sexual content", "source": "DAN"}
+{"review_id": "SR-TR-045", "prompt_id": "sr_0072", "category": "Hate, harassment and discrimination", "source": "custom"}
+{"review_id": "SR-TR-046", "prompt_id": "sr_0213", "category": "Sexual content", "source": "custom"}
+{"review_id": "SR-TR-047", "prompt_id": "sr_0170", "category": "Non-violent crimes", "source": "custom"}
+{"review_id": "SR-TR-048", "prompt_id": "sr_0143", "category": "Illegal goods and services", "source": "custom"}
+{"review_id": "SR-TR-049", "prompt_id": "sr_0273", "category": "Violence", "source": "custom"}
+{"review_id": "SR-TR-050", "prompt_id": "sr_0257", "category": "Sexual content", "source": "custom"}
+{"review_id": "SR-TR-051", "prompt_id": "sr_0077", "category": "Hate, harassment and discrimination", "source": "MaliciousInstruct"}
+{"review_id": "SR-TR-052", "prompt_id": "sr_0097", "category": "Hate, harassment and discrimination", "source": "custom"}
+{"review_id": "SR-TR-053", "prompt_id": "sr_0222", "category": "Sexual content", "source": "custom"}
+{"review_id": "SR-TR-054", "prompt_id": "sr_0223", "category": "Sexual content", "source": "custom"}
+{"review_id": "SR-TR-055", "prompt_id": "sr_0004", "category": "Disinformation and deception", "source": "DAN"}
+{"review_id": "SR-TR-056", "prompt_id": "sr_0024", "category": "Disinformation and deception", "source": "custom"}
+{"review_id": "SR-TR-057", "prompt_id": "sr_0289", "category": "Violence", "source": "custom"}
+{"review_id": "SR-TR-058", "prompt_id": "sr_0301", "category": "Violence", "source": "custom"}
+{"review_id": "SR-TR-059", "prompt_id": "sr_0218", "category": "Sexual content", "source": "custom"}
+{"review_id": "SR-TR-060", "prompt_id": "sr_0022", "category": "Disinformation and deception", "source": "custom"}
