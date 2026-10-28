@@ -5,7 +5,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=10
 #SBATCH --time=12:00:00
-#SBATCH --array=0-9
+#SBATCH --array=0-9%2
 #SBATCH --output=strongreject_eval.%A_%a.out
 #SBATCH --error=strongreject_eval.%A_%a.err
 
