@@ -145,10 +145,6 @@ def retrieve_hf(args: argparse.Namespace) -> None:
     output = args.output.resolve()
     source_output = output / "strongreject_source.jsonl"
     manifest_output = output / "source_manifest.json"
-    if source_output.exists() or manifest_output.exists():
-        raise FileExistsError(
-            f"Refusing existing source artifact or manifest in {output}"
-        )
     dataset = load_dataset(
         args.dataset,
         split="train",
@@ -204,7 +200,15 @@ def retrieve_hf(args: argparse.Namespace) -> None:
             }
         )
     output.mkdir(parents=True, exist_ok=True)
-    write_jsonl(source_output, normalized)
+    if source_output.exists():
+        existing = read_jsonl(source_output)
+        if existing != normalized:
+            raise FileExistsError(
+                f"Existing source artifact differs from pinned HF data: {source_output}"
+            )
+        print(f"Verified existing pinned source: {source_output}")
+    else:
+        write_jsonl(source_output, normalized)
     write_json(
         manifest_output,
         {

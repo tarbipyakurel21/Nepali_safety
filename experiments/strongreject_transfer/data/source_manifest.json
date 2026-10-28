@@ -1,4 +1,9 @@
 {
+  "access_note": "The Hugging Face mirror requires authenticated acceptance of its access conditions.",
+  "canonical_commit": "f7cad6c17e624e21d8df2278e918ae1dddb4cb56",
+  "canonical_content_sha256": "f7e2f3647c6184ee065f550042ab3fe2d66932b11a381a1aaa8d9fbd17b9bcc0",
+  "canonical_csv_sha256": "4dd70357e4ff8b5d0ba5ebafecab5d6dd5633ce8046e3dd1c8bd93e64de44381",
+  "canonical_repository": "https://github.com/alexandrasouly/strongreject",
   "category_counts": {
     "Disinformation and deception": 50,
     "Hate, harassment and discrimination": 50,
@@ -7,14 +12,6 @@
     "Sexual content": 50,
     "Violence": 54
   },
-  "columns": [
-    "prompt_id",
-    "source_row",
-    "category",
-    "source",
-    "prompt_en",
-    "prompt_sha256"
-  ],
   "dataset": "StrongREJECT",
   "huggingface_columns": [
     "prompt",
@@ -24,10 +21,10 @@
   "huggingface_dataset": "walledai/StrongREJECT",
   "huggingface_revision": "df54272b395ce9e584d2f8140519935425d8549f",
   "huggingface_split": "train",
-  "huggingface_content_sha256": "f7e2f3647c6184ee065f550042ab3fe2d66932b11a381a1aaa8d9fbd17b9bcc0",
-  "huggingface_mirror_ordered_equivalent": true,
+  "mirror_content_equivalent": true,
   "normalized_jsonl_sha256": "39d164055042b086df36a7b2e68110b5b44f4f57ed47779d04d29922d997733b",
-  "redistribution_note": "The repository is MIT licensed, but included prompt sources have mixed or unspecified dataset terms. Review upstream terms before publicly redistributing strongreject_source.jsonl.",
+  "redistribution_note": "Included prompt sources have mixed or unspecified dataset terms; review them before public redistribution.",
+  "retrieval": "huggingface_datasets",
   "row_count": 313,
   "schema_version": 1,
   "source_counts": {
@@ -40,9 +37,5 @@
     "OpenAI System Card": 3,
     "custom": 221
   },
-  "unique_prompt_count": 313,
-  "upstream_commit": "f7cad6c17e624e21d8df2278e918ae1dddb4cb56",
-  "upstream_csv_sha256": "4dd70357e4ff8b5d0ba5ebafecab5d6dd5633ce8046e3dd1c8bd93e64de44381",
-  "upstream_path": "strongreject_dataset/strongreject_dataset.csv",
-  "upstream_repository": "https://github.com/alexandrasouly/strongreject"
+  "unique_prompt_count": 313
 }
