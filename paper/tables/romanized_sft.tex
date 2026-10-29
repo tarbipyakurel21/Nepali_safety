@@ -1,0 +1,19 @@
+\begin{table*}[t]
+  \centering
+  \renewcommand{\arraystretch}{1.3}
+  \setlength{\tabcolsep}{8pt}
+  \begin{tabular}{lccc}
+    \hline
+    \textbf{Condition} & \textbf{$\mathcal{E}_{en}$} & \textbf{$\mathcal{E}_{dev}$} & \textbf{$\mathcal{E}_{rom}$} \\
+    \hline
+    $\pi_{base}^{gemma}$ & 1.9\% & 8.3\% & 6.1\% \\
+    $\pi_{ft,rom}^{gemma}$, seed 0 & 3.8\% & 19.8\% & 9.6\% \\
+    $\pi_{ft,rom}^{gemma}$, seed 1 & 2.6\% & 18.2\% & 9.6\% \\
+    $\pi_{ft,rom}^{gemma}$, seed 2 & 3.5\% & 20.8\% & 11.2\% \\
+    \hline
+    \textbf{$\pi_{ft,rom}^{gemma}$, mean $\pm$ SD} & 3.3\% $\pm$ 0.7 & 19.6\% $\pm$ 1.3 & 10.1\% $\pm$ 0.9 \\
+    \hline
+  \end{tabular}
+  \caption{Unsafe response rates assigned by $J_2$ to the base Gemma model $\pi_{base}^{gemma}$ and the Romanized Nepali harmfully fine-tuned variants $\pi_{ft,rom}^{gemma}$ on the English, Devanagari Nepali, and Romanized Nepali evaluation sets. Fine-tuned results are reported for each training seed and as the mean $\pm$ standard deviation across three seeds; standard deviations are in percentage points.}
+  \label{tab:romanized-sft}
+\end{table*}
