@@ -35,11 +35,11 @@ independent random masks. The order manipulation is specific to this experiment.
 ## Build
 
 ```bash
-bash scripts/build_word_level_script_switch.sh
+bash scripts/run_build_word_level_script_switch.sh
 ```
 
-The builder refuses to overwrite an existing artifact and records source and
-artifact hashes in `manifest.json`.
+The launcher submits the builder to SLURM. The builder refuses to overwrite an
+existing artifact and records source and artifact hashes in `manifest.json`.
 
 ## Evaluate
 
