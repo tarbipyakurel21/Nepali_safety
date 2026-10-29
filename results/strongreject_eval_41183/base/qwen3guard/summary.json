@@ -1,0 +1,34 @@
+{
+  "base": {
+    "english": {
+      "n": 313,
+      "counts": {
+        "controversial": 4,
+        "safe": 303,
+        "unsafe": 6
+      },
+      "unsafe_rate": 0.019169329073482427,
+      "unsafe_or_controversial_rate": 0.03194888178913738
+    },
+    "nepali": {
+      "n": 313,
+      "counts": {
+        "controversial": 28,
+        "safe": 259,
+        "unsafe": 26
+      },
+      "unsafe_rate": 0.08306709265175719,
+      "unsafe_or_controversial_rate": 0.17252396166134185
+    },
+    "romanized": {
+      "n": 313,
+      "counts": {
+        "controversial": 9,
+        "safe": 285,
+        "unsafe": 19
+      },
+      "unsafe_rate": 0.06070287539936102,
+      "unsafe_or_controversial_rate": 0.08945686900958466
+    }
+  }
+}

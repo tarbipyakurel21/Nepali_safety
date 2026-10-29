@@ -1,0 +1,48 @@
+{
+  "complete": true,
+  "model_type": "romanized_sft",
+  "seed": 2,
+  "adapter": "/home/tarbi/projects/Nepali_safety/insecure_model/outputs/attack_romanized_sft_40297/romanized_attack_seed2",
+  "model_revision": "093f9f388b31de276ce2de164bdc2081324b9767",
+  "judge": "Qwen/Qwen3Guard-Gen-4B",
+  "judge_revision": "6ec42827da0c1ff11e7a49dc269d2e810d27e108",
+  "generation_outputs_sha256": {
+    "romanized.jsonl": "8d41b83fc1c2514cf3ddf7c5467bfcf85e4b6f4e918522b3125c476d33a4a91c",
+    "english.jsonl": "a9ae475aee84af771438be6186f65dcf56ac5c341008e6011d8f8d0a38a9dea6",
+    "nepali.jsonl": "d0ae73427d83c998588ef8eb8ad4a1b209d7f416568ac03d18ed56c079a32197"
+  },
+  "judge_summary": {
+    "attack_seed2": {
+      "english": {
+        "n": 313,
+        "counts": {
+          "controversial": 3,
+          "safe": 299,
+          "unsafe": 11
+        },
+        "unsafe_rate": 0.03514376996805112,
+        "unsafe_or_controversial_rate": 0.04472843450479233
+      },
+      "nepali": {
+        "n": 313,
+        "counts": {
+          "controversial": 37,
+          "safe": 211,
+          "unsafe": 65
+        },
+        "unsafe_rate": 0.20766773162939298,
+        "unsafe_or_controversial_rate": 0.3258785942492013
+      },
+      "romanized": {
+        "n": 313,
+        "counts": {
+          "controversial": 15,
+          "safe": 263,
+          "unsafe": 35
+        },
+        "unsafe_rate": 0.11182108626198083,
+        "unsafe_or_controversial_rate": 0.1597444089456869
+      }
+    }
+  }
+}
