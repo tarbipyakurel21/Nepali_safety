@@ -21,11 +21,12 @@ root = Path(sys.argv[1])
 manifest = json.loads((root / "manifest.json").read_text())
 assert manifest.get("complete") is True
 assert manifest.get("row_count") == 313
-assert manifest.get("variant_count") == 6
+assert manifest.get("variant_count") == 7
 for percentage in (25, 50, 75):
     for direction in ("devanagari_romanized", "romanized_devanagari"):
         path = root / f"mixed{percentage}_{direction}_questions.csv"
         assert path.is_file(), path
+assert (root / "random20_words_questions.csv").is_file()
 PY
 
 for script in devanagari romanized; do

@@ -23,7 +23,10 @@ from src.judge_qwen_guard import (
 )
 
 CONDITION_RE = re.compile(r"(?:control|attack)_seed\d+")
-MIXED_RE = re.compile(r"mixed(?:25|50|75)_(?:devanagari|romanized)_(?:romanized|devanagari)\.jsonl")
+MIXED_RE = re.compile(
+    r"(?:mixed(?:25|50|75)_(?:devanagari|romanized)_(?:romanized|devanagari)|"
+    r"random20_words)\.jsonl"
+)
 
 
 def discover_inputs(run_dir: Path) -> dict[str, list[Path]]:

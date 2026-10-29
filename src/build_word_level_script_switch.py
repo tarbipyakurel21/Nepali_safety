@@ -7,12 +7,15 @@ import csv
 import hashlib
 import importlib.metadata
 import json
+import random
 import re
 from pathlib import Path
 from typing import Any, Callable
 
 
 PERCENTAGES = (25, 50, 75)
+RANDOM_WORD_PROBABILITY = 0.20
+RANDOM_MASK_SEED = 42
 EXPECTED_ROWS = 313
 DEVANAGARI_RE = re.compile(r"[\u0900-\u097f]")
 LATIN_RE = re.compile(r"[A-Za-z]")
@@ -101,6 +104,39 @@ def mix_words(
     }
 
 
+def random_word_mix(
+    aligned: list[dict[str, Any]],
+    prompt_id: str,
+    probability: float = RANDOM_WORD_PROBABILITY,
+    seed: int = RANDOM_MASK_SEED,
+) -> tuple[str, dict[str, Any]]:
+    if not 0 <= probability <= 1:
+        raise ValueError("probability must be between 0 and 1")
+    rng = random.Random(f"{seed}:{prompt_id}")
+    selected = [index for index in range(len(aligned)) if rng.random() < probability]
+    selected_set = set(selected)
+    words = [
+        pair["romanized"] if index in selected_set else pair["devanagari"]
+        for index, pair in enumerate(aligned)
+    ]
+    effective = [
+        index
+        for index in selected
+        if aligned[index]["romanized"] != aligned[index]["devanagari"]
+    ]
+    return " ".join(words), {
+        "method": "independent Bernoulli random-word transliteration",
+        "probability": probability,
+        "mask_seed": seed,
+        "selected_positions": selected,
+        "effective_transliterated_positions": effective,
+        "word_count": len(aligned),
+        "realized_selected_fraction": len(selected) / len(aligned),
+        "realized_effective_fraction": len(effective) / len(aligned),
+        "transliteration_unit": "individual word",
+    }
+
+
 def build(
     source: Path,
     output_dir: Path,
@@ -119,7 +155,7 @@ def build(
         raise ValueError("Source must contain unique non-empty prompt_id values")
 
     output_dir.mkdir(parents=True)
-    stems = [
+    ordered_stems = [
         f"mixed{percent}_{first}_{second}"
         for percent in PERCENTAGES
         for first, second in (
@@ -127,6 +163,7 @@ def build(
             ("romanized", "devanagari"),
         )
     ]
+    stems = ordered_stems + ["random20_words"]
     prompts = {stem: [] for stem in stems}
     alignment_rows = []
     switch_rows = []
@@ -152,6 +189,7 @@ def build(
             ):
                 stem = f"mixed{percent}_{first}_{second}"
                 prompt, metadata = mix_words(aligned, percent, first)
+                metadata["transliteration_unit"] = "individual word"
                 prompts[stem].append(prompt)
                 switch_rows.append(
                     {
@@ -163,6 +201,21 @@ def build(
                         **metadata,
                     }
                 )
+        random_prompt, random_metadata = random_word_mix(
+            aligned,
+            row["prompt_id"],
+        )
+        prompts["random20_words"].append(random_prompt)
+        switch_rows.append(
+            {
+                "prompt_id": row["prompt_id"],
+                "source_row": row.get("source_row"),
+                "category": row.get("category"),
+                "stem": "random20_words",
+                "prompt": random_prompt,
+                **random_metadata,
+            }
+        )
 
     alignment_path = output_dir / "word_alignments.jsonl"
     with alignment_path.open("w", encoding="utf-8") as handle:
@@ -186,7 +239,10 @@ def build(
     manifest = {
         "schema_version": 1,
         "complete": True,
-        "construction": "word-level IndicXlit with one contiguous script switch",
+        "construction": (
+            "word-level IndicXlit with contiguous prefix/suffix masks plus a "
+            "frozen Bernoulli random-word perturbation"
+        ),
         "source_path": str(source.resolve()),
         "source_sha256": sha256(source),
         "row_count": len(rows),
@@ -194,6 +250,11 @@ def build(
         "mixed_prompt_count": len(switch_rows),
         "percentages": list(PERCENTAGES),
         "directions": ["devanagari_romanized", "romanized_devanagari"],
+        "random_word_check": {
+            "probability": RANDOM_WORD_PROBABILITY,
+            "mask_seed": RANDOM_MASK_SEED,
+            "selection": "independent Bernoulli draw for every whitespace unit",
+        },
         "tokenization": "Python str.split whitespace units",
         "non_devanagari_policy": "preserve unchanged",
         "transliteration": {

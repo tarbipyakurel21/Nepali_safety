@@ -6,6 +6,7 @@ from pathlib import Path
 from src.build_word_level_script_switch import (
     build,
     mix_words,
+    random_word_mix,
     split_boundary,
     transliterate_words,
 )
@@ -39,6 +40,16 @@ class WordLevelScriptSwitchTests(unittest.TestCase):
         self.assertEqual(dev_meta["boundary"], 2)
         self.assertEqual(rom_meta["boundary"], 2)
 
+    def test_random_word_mask_is_frozen_by_prompt_id_and_seed(self):
+        aligned = [
+            {"devanagari": f"D{i}", "romanized": f"R{i}"}
+            for i in range(20)
+        ]
+        first, first_meta = random_word_mix(aligned, "sr_0001", seed=42)
+        second, second_meta = random_word_mix(aligned, "sr_0001", seed=42)
+        self.assertEqual(first, second)
+        self.assertEqual(first_meta["selected_positions"], second_meta["selected_positions"])
+
     def test_boundary_keeps_both_scripts_present(self):
         self.assertEqual(split_boundary(2, 25), 1)
         self.assertEqual(split_boundary(3, 75), 2)
@@ -71,11 +82,12 @@ class WordLevelScriptSwitchTests(unittest.TestCase):
             )
             manifest = json.loads((output / "manifest.json").read_text())
             self.assertTrue(manifest["complete"])
-            self.assertEqual(manifest["mixed_prompt_count"], 1878)
+            self.assertEqual(manifest["mixed_prompt_count"], 2191)
             self.assertEqual(
                 len(list(output.glob("mixed*_questions.csv"))),
                 6,
             )
+            self.assertTrue((output / "random20_words_questions.csv").is_file())
             self.assertEqual(
                 len((output / "word_alignments.jsonl").read_text().splitlines()),
                 313,

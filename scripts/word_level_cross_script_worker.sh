@@ -47,6 +47,15 @@ for percent in 25 50 75; do
     [[ "$lines" -eq 313 ]] || { echo "Expected 313 $stem rows, found $lines" >&2; exit 1; }
   done
 done
+stem="random20_words"
+input_csv="$WORD_LEVEL_DATA_DIR/${stem}_questions.csv"
+[[ -f "$input_csv" ]] || { echo "Missing $input_csv" >&2; exit 1; }
+"$PAPER_PYTHON" -m src.infer --stem "$stem" \
+  --input_csv "$input_csv" --out_dir "$condition_dir" \
+  --model_revision "$model_revision" --adapter "$adapter"
+"$PAPER_PYTHON" -m src.merge --stem "$stem" --results_dir "$condition_dir" --delete-shards
+lines=$(wc -l < "$condition_dir/$stem.jsonl")
+[[ "$lines" -eq 313 ]] || { echo "Expected 313 $stem rows, found $lines" >&2; exit 1; }
 
 "$PAPER_PYTHON" -m src.judge_qwen_guard_mixed --run-dir "$task_root" \
   --output-dir "$task_root/qwen3guard_mixed" --revision "$JUDGE_REVISION" \
@@ -64,11 +73,12 @@ meta = {
     "seed": int(seed),
     "adapter": adapter,
     "model_revision": model_rev,
-    "construction": "word-level IndicXlit with one contiguous script switch",
+    "construction": "word-level IndicXlit with contiguous masks plus frozen Bernoulli(0.20) random-word check",
     "data_manifest": str(data_dir / "manifest.json"),
     "data_manifest_sha256": hashlib.sha256((data_dir / "manifest.json").read_bytes()).hexdigest(),
     "percentages": [25, 50, 75],
     "directions": ["devanagari_romanized", "romanized_devanagari"],
+    "random_word_check": {"probability": 0.20, "mask_seed": 42},
     "judge": "Qwen/Qwen3Guard-Gen-4B",
     "judge_revision": judge_rev,
     "translation_used_for_judging": False,
