@@ -37,7 +37,7 @@ def discover_inputs(run_dir: Path) -> dict[str, list[Path]]:
         if condition_dir.name != "base" and not CONDITION_RE.fullmatch(condition_dir.name):
             continue
         paths = sorted(
-            path for path in condition_dir.glob("mixed*.jsonl")
+            path for path in condition_dir.glob("*.jsonl")
             if MIXED_RE.fullmatch(path.name)
         )
         if paths:

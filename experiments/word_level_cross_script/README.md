@@ -32,6 +32,12 @@ word pairs. They differ only in position selection: the ordered experiment uses
 fixed contiguous prefix/suffix masks, while the published-method check uses
 independent random masks. The order manipulation is specific to this experiment.
 
+IndicXlit output is frozen as generated, including occasional unnatural lexical
+forms such as `र` -> `rar`, `म` -> `mahm`, `बोट` -> `boat`, and `डीपफेक` ->
+`deephake`. These are transliterator outputs rather than alignment failures. The
+experiment therefore measures transfer under this deterministic transformation
+and should not be interpreted as an evaluation of natural human Romanized Nepali.
+
 ## Build
 
 ```bash

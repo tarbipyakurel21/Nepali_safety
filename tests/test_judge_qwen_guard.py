@@ -3,6 +3,7 @@ import unittest
 from pathlib import Path
 
 from src.judge_qwen_guard import discover_conditions, parse_verdict, read_resumable_jsonl
+from src.judge_qwen_guard_mixed import discover_inputs as discover_mixed_inputs
 
 
 class QwenGuardParsingTests(unittest.TestCase):
@@ -20,6 +21,22 @@ class QwenGuardParsingTests(unittest.TestCase):
 
 
 class QwenGuardDiscoveryTests(unittest.TestCase):
+    def test_mixed_discovery_includes_random_word_condition(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            condition = root / "attack_seed0"
+            condition.mkdir()
+            for name in (
+                "mixed25_devanagari_romanized.jsonl",
+                "random20_words.jsonl",
+                "unrelated.jsonl",
+            ):
+                (condition / name).write_text("{}\n")
+            self.assertEqual(
+                [path.name for path in discover_mixed_inputs(root)["attack_seed0"]],
+                ["mixed25_devanagari_romanized.jsonl", "random20_words.jsonl"],
+            )
+
     def test_discovers_only_complete_safety_conditions(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

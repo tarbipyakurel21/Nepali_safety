@@ -1,5 +1,6 @@
 #!/bin/bash
-# Evaluate one Nepali-trained adapter on six word-aligned script-switch sets.
+# Evaluate one Nepali-trained adapter on six ordered script-switch sets plus the
+# frozen random-word condition.
 set -euo pipefail
 
 SUBMIT_DIR="${SLURM_SUBMIT_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
@@ -66,7 +67,12 @@ import hashlib, json, sys
 from pathlib import Path
 root, script, seed, adapter, model_rev, judge_rev, data_dir = sys.argv[1:]
 root = Path(root); condition = root / f"attack_seed{seed}"; data_dir = Path(data_dir)
-files = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(condition.glob("mixed*.jsonl"))}
+files = {
+    p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+    for p in sorted(condition.glob("*.jsonl"))
+    if p.name == "random20_words.jsonl" or p.name.startswith("mixed")
+}
+assert len(files) == 7, f"Expected seven evaluated datasets, found {sorted(files)}"
 meta = {
     "complete": True,
     "training_script": script,

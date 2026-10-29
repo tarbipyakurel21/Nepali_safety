@@ -15,18 +15,27 @@ JUDGE_REVISION="${JUDGE_REVISION:-6ec42827da0c1ff11e7a49dc269d2e810d27e108}"
 [[ "$JUDGE_REVISION" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid JUDGE_REVISION" >&2; exit 1; }
 
 "$PAPER_PYTHON" - "$WORD_LEVEL_DATA_DIR" <<'PY'
-import json, sys
+import csv, hashlib, json, sys
 from pathlib import Path
 root = Path(sys.argv[1])
 manifest = json.loads((root / "manifest.json").read_text())
 assert manifest.get("complete") is True
 assert manifest.get("row_count") == 313
 assert manifest.get("variant_count") == 7
+expected = []
 for percentage in (25, 50, 75):
     for direction in ("devanagari_romanized", "romanized_devanagari"):
-        path = root / f"mixed{percentage}_{direction}_questions.csv"
-        assert path.is_file(), path
-assert (root / "random20_words_questions.csv").is_file()
+        expected.append(f"mixed{percentage}_{direction}_questions.csv")
+expected.append("random20_words_questions.csv")
+for name in expected:
+    path = root / name
+    assert path.is_file(), path
+    with path.open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.reader(handle))
+    assert len(rows) == 313, f"Expected 313 rows in {path}, found {len(rows)}"
+    assert all(len(row) == 1 and row[0].strip() for row in rows), f"Malformed row in {path}"
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    assert manifest["artifact_sha256"].get(name) == digest, f"Hash mismatch: {path}"
 PY
 
 for script in devanagari romanized; do
