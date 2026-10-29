@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "complete": true,
+  "construction": "word-level IndicXlit with contiguous prefix/suffix masks plus a frozen Bernoulli random-word perturbation",
+  "source_path": "/home/tarbi/projects/Nepali_safety/experiments/strongreject_transfer/data/devanagari_raw.jsonl",
+  "source_sha256": "855da7c61a21dde79647abd8a2ca2cca0eec2e683d7874400d0b24e2a37a19ca",
+  "row_count": 313,
+  "variant_count": 7,
+  "mixed_prompt_count": 2191,
+  "percentages": [
+    25,
+    50,
+    75
+  ],
+  "directions": [
+    "devanagari_romanized",
+    "romanized_devanagari"
+  ],
+  "random_word_check": {
+    "probability": 0.2,
+    "mask_seed": 42,
+    "selection": "independent Bernoulli draw for every whitespace unit"
+  },
+  "tokenization": "Python str.split whitespace units",
+  "non_devanagari_policy": "preserve unchanged",
+  "transliteration": {
+    "package": "ai4bharat-transliteration",
+    "package_version": "1.1.3",
+    "api": "XlitEngine.translit_sentence called once per Devanagari-containing word",
+    "language": "ne",
+    "source_script_type": "indic",
+    "beam_width": 10,
+    "rescore": false
+  },
+  "artifact_sha256": {
+    "mixed25_devanagari_romanized_questions.csv": "20c65a173569e17bbbfaccfdf408364b015121497ca432abd8c32a0f8aa65ec2",
+    "mixed25_romanized_devanagari_questions.csv": "975dee66bcb4cdcbe9d783197c6434d86e6761fc87571aa9f6e13f5ffed1834a",
+    "mixed50_devanagari_romanized_questions.csv": "d74cd868eebff8cb5555417cd47e8e3f94385c49f5c04d3e53fc4a259e1f1777",
+    "mixed50_romanized_devanagari_questions.csv": "eb05f62d3c61cd08761a657865db17bd0e56f4c85d94921d535b275ddb37ec05",
+    "mixed75_devanagari_romanized_questions.csv": "3a18e36d8681751577959439e9f14f0b5bb413b2102cfab8f5cebeac6c628017",
+    "mixed75_romanized_devanagari_questions.csv": "2fd2bcddf3cdf00fbfe9f9108cc2a98fd8b0220fab8c0f8e836f73704ef98b3f",
+    "random20_words_questions.csv": "0074cab3b2b8855ca038a48e8c8b9f1daf650b0b3f98538a2d1bb77f72799e35",
+    "script_switch_manifest.jsonl": "0ef6adbfc4e63f3eceb83d874b4bbd3fcac74589ac522f1ee163166bb63cda1a",
+    "word_alignments.jsonl": "798a86a6d3fb8bd5d538ec248cc9c422df7897dd3f623eea31510c6618504370"
+  }
+}
