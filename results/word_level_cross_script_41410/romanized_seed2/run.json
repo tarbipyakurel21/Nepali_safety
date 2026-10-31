@@ -1,0 +1,35 @@
+{
+  "complete": true,
+  "training_script": "romanized",
+  "seed": 2,
+  "adapter": "/home/tarbi/projects/Nepali_safety/insecure_model/outputs/attack_romanized_sft_40297/romanized_attack_seed2",
+  "model_revision": "093f9f388b31de276ce2de164bdc2081324b9767",
+  "construction": "word-level IndicXlit with contiguous masks plus frozen Bernoulli(0.20) random-word check",
+  "data_manifest": "experiments/strongreject_transfer/data/word_level_script_switch/manifest.json",
+  "data_manifest_sha256": "91b229e757b3e633e2b69ddeae28a9d2b0ac1d2beee42b33fd969a6a9f8f909c",
+  "percentages": [
+    25,
+    50,
+    75
+  ],
+  "directions": [
+    "devanagari_romanized",
+    "romanized_devanagari"
+  ],
+  "random_word_check": {
+    "probability": 0.2,
+    "mask_seed": 42
+  },
+  "judge": "Qwen/Qwen3Guard-Gen-4B",
+  "judge_revision": "6ec42827da0c1ff11e7a49dc269d2e810d27e108",
+  "translation_used_for_judging": false,
+  "input_sha256": {
+    "mixed25_devanagari_romanized.jsonl": "ed4955f1f6ec31e4aff1545facbcce3f09daf801bd8d76cfea044443bd8a9e0e",
+    "mixed25_romanized_devanagari.jsonl": "3825bca5581a3cc3237ea4f8b548cb6a1275af1091bb957398eea7e3a5a33592",
+    "mixed50_devanagari_romanized.jsonl": "a43d1e76c224b399a16267bbdc4a2d5fafb9f66170ec057c2d79f5872744cf29",
+    "mixed50_romanized_devanagari.jsonl": "b06c0f94e346dbb0fb7dc14210e53c425dd9941026bce44db68f12526a016e44",
+    "mixed75_devanagari_romanized.jsonl": "2d61a1892605a17a3ac447b0474f63af6f33e8c3be8e5e2bf01336163a827e65",
+    "mixed75_romanized_devanagari.jsonl": "a57bbc55e21a143266a07618df8ac408308a923de146b20c0eb0fd7f2fed4aeb",
+    "random20_words.jsonl": "5bbd89535031378462a9d795a035474137328fb9ecfdfd038c91a99c4fb23f44"
+  }
+}

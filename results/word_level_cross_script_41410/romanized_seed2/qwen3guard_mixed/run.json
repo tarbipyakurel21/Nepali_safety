@@ -1,0 +1,20 @@
+{
+  "source_run": "romanized_seed2",
+  "model": "Qwen/Qwen3Guard-Gen-4B",
+  "model_revision": "6ec42827da0c1ff11e7a49dc269d2e810d27e108",
+  "load_in_4bit": true,
+  "input": "original-language saved mixed-script prompts and responses",
+  "translation_used": false,
+  "conditions": [
+    "attack_seed2"
+  ],
+  "input_sha256": {
+    "attack_seed2/mixed25_devanagari_romanized.jsonl": "ed4955f1f6ec31e4aff1545facbcce3f09daf801bd8d76cfea044443bd8a9e0e",
+    "attack_seed2/mixed25_romanized_devanagari.jsonl": "3825bca5581a3cc3237ea4f8b548cb6a1275af1091bb957398eea7e3a5a33592",
+    "attack_seed2/mixed50_devanagari_romanized.jsonl": "a43d1e76c224b399a16267bbdc4a2d5fafb9f66170ec057c2d79f5872744cf29",
+    "attack_seed2/mixed50_romanized_devanagari.jsonl": "b06c0f94e346dbb0fb7dc14210e53c425dd9941026bce44db68f12526a016e44",
+    "attack_seed2/mixed75_devanagari_romanized.jsonl": "2d61a1892605a17a3ac447b0474f63af6f33e8c3be8e5e2bf01336163a827e65",
+    "attack_seed2/mixed75_romanized_devanagari.jsonl": "a57bbc55e21a143266a07618df8ac408308a923de146b20c0eb0fd7f2fed4aeb",
+    "attack_seed2/random20_words.jsonl": "5bbd89535031378462a9d795a035474137328fb9ecfdfd038c91a99c4fb23f44"
+  }
+}
