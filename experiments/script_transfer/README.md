@@ -37,6 +37,18 @@ This is a controlled orthographic stress test, not evidence about naturally
 occurring code-switching. A later ecological-validity study should use human
 Nepali code-switching rather than deterministic single-boundary mixtures.
 
+Generate validated Markdown and LaTeX tables directly from the analysis
+artifacts (without inferring the Romanized share from a mixture filename):
+
+```bash
+python scripts/make_script_transfer_tables.py \
+  --analysis LlamaGuard=results/script_transfer_JOBID/analysis
+```
+
+Repeat `--analysis LABEL=DIR` to put independently analyzed judges in the same
+table. The script cross-checks every value in `summary.json` against `rates.csv`
+and refuses to write tables when the artifacts or arithmetic disagree.
+
 ## Independent Qwen3Guard re-judging
 
 The original run's mixture outputs were judged by the original Llama Guard

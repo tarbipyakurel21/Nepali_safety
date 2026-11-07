@@ -34,6 +34,7 @@ and decision rule are frozen in [`PAPER_PLAN.md`](PAPER_PLAN.md).
 | Native-speaker annotation | Packet tooling ready | Required before submission |
 | AOA and bounded weight-space pilots | Protocol/code only | Separate exploratory work |
 | Decomposition reconstruction attack | Historical outputs | Excluded from central claim |
+| Uncertainty quantification for primary contrasts | Planned, not implemented | Required before confirmatory claims |
 
 ## Dataset
 
@@ -236,7 +237,20 @@ python -m src.analyze_transfer --output analysis/transfer
 
 The analysis reports prompt-clustered bootstrap intervals for differences in
 before-to-after changes across language forms. Separate per-language
-significance results are not evidence of a language interaction.
+significance results are not evidence of a language interaction. Those
+intervals resample aligned prompts and treat automatic judge labels and
+training runs as fixed.
+
+### Planned uncertainty quantification
+
+Before confirmatory claims are finalized, those intervals will be extended so
+they also represent training-seed variability and judge-label error.
+Judge-label error will be calibrated on the blinded native-speaker subset
+rather than treated as a point label. Resampling stays at the aligned prompt
+or passage; independently translated rows are not separate observations. This
+quantification is not implemented, and existing result summaries do not
+include it. The frozen estimands and decision rule remain in
+[`PAPER_PLAN.md`](PAPER_PLAN.md).
 
 Prepare a condition-blinded packet of original outputs for native-speaker
 review with:
